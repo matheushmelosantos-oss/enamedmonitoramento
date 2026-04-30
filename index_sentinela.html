@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projeto Sentinela · São Leopoldo Mandic</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #0E1A2D;
+  --navy2: #12213A;
+  --navy3: #1A2E50;
+  --gold: #C9973A;
+  --gold2: #E8B84B;
+  --border: #1A2840;
+  --border2: #243550;
+  --text: #E8EAF6;
+  --text2: #8090B0;
+  --muted: #3A5070;
+  --green: #22C55E;
+  --font: 'Inter', sans-serif;
+}
+body { background:var(--navy); color:var(--text); font-family:var(--font); min-height:100vh; display:flex; flex-direction:column; }
+
+.bg-glow { position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 20%, rgba(201,151,58,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 90% 80%, rgba(34,197,94,.04) 0%, transparent 60%); }
+
+header { position:relative; z-index:10; padding:24px 48px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+.logo { display:flex; align-items:center; gap:12px; }
+.logo-box { width:36px; height:36px; background:var(--gold); border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; color:var(--navy); flex-shrink:0; }
+.logo-text { font-size:14px; font-weight:700; color:white; }
+.logo-text span { color:var(--gold2); }
+.header-right { font-size:11px; color:var(--muted); letter-spacing:.04em; display:flex; align-items:center; gap:6px; }
+.live-dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation:pulse 2s infinite; }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.hero { position:relative; z-index:10; padding:72px 48px 56px; max-width:840px; }
+.hero-eyebrow { display:inline-flex; align-items:center; gap:7px; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--gold2); background:rgba(201,151,58,.1); border:1px solid rgba(201,151,58,.2); padding:4px 14px; border-radius:99px; margin-bottom:22px; }
+.hero h1 { font-size:clamp(36px,5vw,56px); font-weight:800; line-height:1.08; letter-spacing:-.025em; margin-bottom:18px; }
+.hero h1 em { font-style:normal; color:var(--gold2); }
+.hero p { font-size:15px; color:var(--text2); line-height:1.8; max-width:520px; margin-bottom:32px; }
+
+.meta-bar { position:relative; z-index:10; padding:0 48px 40px; display:flex; gap:10px; flex-wrap:wrap; }
+.meta-chip { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--text2); background:rgba(255,255,255,.04); border:1px solid var(--border2); padding:6px 14px; border-radius:99px; }
+.meta-dot { width:7px; height:7px; border-radius:50%; }
+
+.cards { position:relative; z-index:10; padding:0 48px 80px; display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:1000px; }
+
+.card { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:18px; padding:28px; text-decoration:none; display:flex; flex-direction:column; position:relative; overflow:hidden; transition:transform .3s,border-color .3s,box-shadow .3s; opacity:0; animation:rise .5s ease forwards; }
+.card::before { content:''; position:absolute; inset:0; opacity:0; border-radius:18px; transition:opacity .3s; }
+.card:hover { transform:translateY(-4px); }
+.card:hover::before { opacity:1; }
+.card:nth-child(1){animation-delay:.1s} .card:nth-child(2){animation-delay:.2s}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.card-main { grid-column:1/-1; }
+
+.card-painel::before { background:radial-gradient(ellipse at 0% 0%,rgba(201,151,58,.07),transparent 55%); }
+.card-painel:hover { border-color:rgba(201,151,58,.4); box-shadow:0 20px 60px rgba(201,151,58,.08); }
+
+.card-guia::before { background:radial-gradient(ellipse at 0% 0%,rgba(34,197,94,.06),transparent 55%); }
+.card-guia:hover { border-color:rgba(34,197,94,.35); box-shadow:0 20px 60px rgba(34,197,94,.07); }
+
+.card-icon { width:48px; height:48px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:20px; }
+.card-painel .card-icon { background:rgba(201,151,58,.12); }
+.card-guia .card-icon { background:rgba(34,197,94,.1); }
+
+.card-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+.card-painel .card-label { color:var(--gold2); }
+.card-guia .card-label { color:var(--green); }
+
+.card-title { font-size:20px; font-weight:800; color:white; line-height:1.25; margin-bottom:10px; letter-spacing:-.01em; }
+.card-desc { font-size:13px; color:var(--text2); line-height:1.7; flex:1; }
+
+.card-footer { margin-top:22px; padding-top:16px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-tags { display:flex; gap:6px; flex-wrap:wrap; }
+.card-tag { font-size:10px; color:var(--muted); background:rgba(255,255,255,.04); border:1px solid var(--border2); padding:3px 9px; border-radius:99px; }
+.card-arrow { font-size:14px; color:var(--muted); transition:transform .2s,color .2s; }
+.card:hover .card-arrow { transform:translateX(4px); color:white; }
+
+/* PROTOCOL BAR */
+.protocol-bar { position:relative; z-index:10; padding:0 48px 0; margin-bottom:40px; }
+.protocol-inner { background:rgba(255,255,255,.03); border:1px solid var(--border2); border-radius:14px; padding:18px 24px; }
+.protocol-title { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+.protocol-levels { display:flex; gap:0; }
+.pl { flex:1; display:flex; flex-direction:column; gap:4px; padding:0 16px; border-right:1px solid var(--border); }
+.pl:first-child { padding-left:0; }
+.pl:last-child { border-right:none; }
+.pl-level { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; }
+.pl-dot { width:8px; height:8px; border-radius:50%; }
+.pl-action { font-size:11px; color:var(--muted); }
+
+footer { position:relative; z-index:10; margin-top:auto; border-top:1px solid var(--border); padding:18px 48px; display:flex; align-items:center; justify-content:space-between; }
+.footer-left { font-size:11px; color:var(--muted); }
+.footer-right { display:flex; gap:16px; flex-wrap:wrap; }
+.fc { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+.fcd { width:6px; height:6px; border-radius:50%; }
+
+@media(max-width:768px){
+  /* header */
+  header{padding:14px 20px;flex-direction:column;align-items:flex-start;gap:6px;height:auto}
+  .header-right{font-size:10px;letter-spacing:.02em}
+
+  /* hero */
+  .hero{padding:40px 20px 36px;max-width:100%}
+  .hero-eyebrow{font-size:9px;padding:3px 10px}
+  .hero h1{font-size:clamp(28px,7vw,42px)}
+  .hero p{font-size:13px;margin-bottom:24px}
+
+  /* meta chips */
+  .meta-bar{padding:0 20px 32px;gap:8px}
+  .meta-chip{font-size:10px;padding:5px 10px}
+
+  /* protocol */
+  .protocol-bar{padding:0 20px;margin-bottom:28px}
+  .protocol-inner{padding:14px 16px}
+  .protocol-levels{flex-direction:column;gap:10px}
+  .pl{border-right:none;border-bottom:1px solid var(--border);padding:0 0 10px;flex:none}
+  .pl:last-child{border-bottom:none;padding-bottom:0}
+  .pl-action{font-size:10px}
+
+  /* cards */
+  .cards{padding:0 20px 60px;grid-template-columns:1fr;gap:12px}
+  .card-main{grid-column:1}
+  .card{padding:22px 18px}
+  .card-title{font-size:17px}
+  .card-desc{font-size:12px}
+  .card-tags{display:none}
+
+  /* footer */
+  footer{padding:14px 20px;flex-direction:column;align-items:flex-start;gap:10px}
+  .footer-right{gap:10px;flex-wrap:wrap}
+}
+
+@media(max-width:400px){
+  .hero h1{font-size:26px}
+  .hero-eyebrow{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-box">M</div>
+    <div class="logo-text">Projeto <span>Sentinela</span></div>
+  </div>
+  <div class="header-right"><div class="live-dot"></div>Monitoramento de Clima · Customer Experience · São Leopoldo Mandic</div>
+</header>
+
+<div class="hero">
+  <div class="hero-eyebrow">🎓 ENAMED 2026 · Turma Medicina</div>
+  <h1>Risco identificado.<br><em>Engajamento</em> garantido.</h1>
+  <p>Sistema integrado de monitoramento do clima dos 200 alunos do último ano de Medicina — cruzando indicadores acadêmicos, de experiência e de voz para garantir o engajamento máximo até a prova.</p>
+</div>
+
+<div class="meta-bar">
+  <div class="meta-chip"><div class="meta-dot" style="background:#4F8EF7"></div>INDECX · NPS + CSAT · sync 6h</div>
+  <div class="meta-chip"><div class="meta-dot" style="background:var(--gold2)"></div>Medway · exercícios · sync diário</div>
+  <div class="meta-chip"><div class="meta-dot" style="background:#FB923C"></div>Simulado + Presença · upload mensal</div>
+  <div class="meta-chip"><div class="meta-dot" style="background:#A78BFA"></div>Claude API · classificação IA</div>
+  <div class="meta-chip"><div class="meta-dot" style="background:var(--green)"></div>200 alunos · 4 unidades · ~24 sem</div>
+</div>
+
+<div class="protocol-bar">
+  <div class="protocol-inner">
+    <div class="protocol-title">Protocolo institucional de ação</div>
+    <div class="protocol-levels">
+      <div class="pl">
+        <div class="pl-level"><div class="pl-dot" style="background:#22C55E"></div><span style="color:#22C55E">Verde</span></div>
+        <div class="pl-action">Monitoramento padrão</div>
+      </div>
+      <div class="pl">
+        <div class="pl-level"><div class="pl-dot" style="background:#D4A017"></div><span style="color:#D4A017">Amarelo</span></div>
+        <div class="pl-action">CX revisita em 14 dias</div>
+      </div>
+      <div class="pl">
+        <div class="pl-level"><div class="pl-dot" style="background:#E07820"></div><span style="color:#E07820">Laranja</span></div>
+        <div class="pl-action">Conversa individual · Coord. em 7 dias</div>
+      </div>
+      <div class="pl">
+        <div class="pl-level"><div class="pl-dot" style="background:#E53935"></div><span style="color:#E53935">Vermelho</span></div>
+        <div class="pl-action">Comitê em 48h · CX + Coord. + Psicopedagogia</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cards">
+
+  <a class="card card-painel card-main" href="Sentinela_Painel.html">
+    <div class="card-icon">📊</div>
+    <div class="card-label">Painel Operacional</div>
+    <div class="card-title">Sentinela · Monitoramento de Clima Pré-ENAMED</div>
+    <div class="card-desc">Farol de risco por aluno, distribuição por unidade, sinais mais frequentes, alertas prioritários com tags de risco, perfil individual com score composto, análise de sentimento por IA, citações verbatim, plano de ação gerado por IA, registro de tratativas e calibração de limiares.</div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <div class="card-tag">5 abas</div>
+        <div class="card-tag">Perfil individual</div>
+        <div class="card-tag">IA integrada</div>
+        <div class="card-tag">Tratativas</div>
+        <div class="card-tag">Calibração</div>
+      </div>
+      <div class="card-arrow">→</div>
+    </div>
+  </a>
+
+  <a class="card card-guia" href="Sentinela_Guia.html">
+    <div class="card-icon">🗓</div>
+    <div class="card-label">Guia de Implementação</div>
+    <div class="card-title">Do zero ao Sentinela funcionando em 2 semanas</div>
+    <div class="card-desc">Passo a passo em 3 fases e 10 dias para conectar INDECX, Medway e dados da coordenação, calcular o score composto e colocar os alertas automáticos funcionando. Checklist interativo — marque o progresso conforme avança.</div>
+    <div class="card-footer">
+      <div class="card-tags">
+        <div class="card-tag">3 fases</div>
+        <div class="card-tag">10 dias</div>
+        <div class="card-tag">Checklist vivo</div>
+      </div>
+      <div class="card-arrow">→</div>
+    </div>
+  </a>
+
+</div>
+
+<footer>
+  <div class="footer-left">Projeto Sentinela · CX · São Leopoldo Mandic · v1.0 · Abr/2026</div>
+  <div class="footer-right">
+    <div class="fc"><div class="fcd" style="background:#4F8EF7"></div>INDECX</div>
+    <div class="fc"><div class="fcd" style="background:var(--gold2)"></div>Medway</div>
+    <div class="fc"><div class="fcd" style="background:#22C55E"></div>Google Sheets</div>
+    <div class="fc"><div class="fcd" style="background:#FBBF24"></div>Make.com</div>
+    <div class="fc"><div class="fcd" style="background:#A78BFA"></div>Claude API</div>
+  </div>
+</footer>
+
+</body>
+</html>

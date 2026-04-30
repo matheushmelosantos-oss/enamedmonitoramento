@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projeto Sentinela · Monitoramento de Clima</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #12213A;
+  --navy2: #1A2E50;
+  --navy3: #0E1A2D;
+  --gold: #C9973A;
+  --gold2: #E8B84B;
+  --bg: #F4F5F7;
+  --surface: #FFFFFF;
+  --border: #E8EAEF;
+  --text: #1A1D2E;
+  --text2: #5A6080;
+  --muted: #9AA0BC;
+  --green: #2E7D52;
+  --green-bg: #E8F5EE;
+  --green-light: #4CAF7A;
+  --yellow: #9A6800;
+  --yellow-bg: #FEF9E4;
+  --yellow-light: #D4A017;
+  --orange: #B85A00;
+  --orange-bg: #FEF0E0;
+  --orange-light: #E07820;
+  --red: #C0392B;
+  --red-bg: #FEE8E6;
+  --red-light: #E53935;
+  --font: 'Inter', sans-serif;
+}
+body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:13px; line-height:1.5; min-height:100vh; }
+::-webkit-scrollbar{width:5px;height:5px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+/* ── TOPBAR ── */
+.topbar {
+  background:var(--navy); height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; position:sticky; top:0; z-index:200;
+}
+.topbar-left { display:flex; align-items:center; gap:14px; }
+.topbar-logo {
+  width:36px; height:36px; background:var(--gold); border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:15px; color:var(--navy); flex-shrink:0;
+}
+.topbar-info { }
+.topbar-title { font-size:13px; font-weight:600; color:white; line-height:1.2; }
+.topbar-sub { font-size:10px; color:#8890B0; text-transform:uppercase; letter-spacing:.08em; }
+.topbar-right { display:flex; align-items:center; gap:14px; }
+.topbar-status { display:flex; align-items:center; gap:6px; font-size:11px; color:#8890B0; }
+.status-dot { width:7px; height:7px; background:#22C55E; border-radius:50%; animation:blink 2s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-export { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:white; padding:7px 16px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); transition:background .2s; }
+.btn-export:hover { background:rgba(255,255,255,.18); }
+
+/* ── TABS ── */
+.tabs { background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; display:flex; gap:0; }
+.tab { padding:14px 20px; font-size:12px; font-weight:500; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; white-space:nowrap; display:flex; align-items:center; gap:7px; user-select:none; }
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--navy); border-bottom-color:var(--gold); font-weight:600; }
+.tab-num { font-size:10px; background:var(--bg); padding:2px 7px; border-radius:4px; color:var(--muted); }
+.tab.active .tab-num { background:var(--gold); color:white; }
+
+/* ── TAB CONTENT ── */
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* ── PAGE ── */
+.page { padding:24px; max-width:1380px; margin:0 auto; }
+
+/* ── HERO BANNER ── */
+.hero-banner {
+  background:linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, #1A3560 100%);
+  border-radius:16px; padding:32px 36px; display:flex; gap:40px; align-items:center;
+  margin-bottom:20px; position:relative; overflow:hidden;
+}
+.hero-banner::before {
+  content:''; position:absolute; right:-60px; top:-60px;
+  width:300px; height:300px; border-radius:50%;
+  background:rgba(201,151,58,.08); border:1px solid rgba(201,151,58,.1);
+}
+.hero-gauge { flex-shrink:0; text-align:center; }
+.gauge-wrap { position:relative; width:140px; height:140px; }
+.gauge-label { position:absolute; top:6px; left:50%; transform:translateX(-50%); font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#8890B0; }
+.gauge-num { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); font-size:44px; font-weight:800; color:white; line-height:1; }
+.gauge-status-text { font-size:11px; color:#8890B0; margin-top:4px; }
+.gauge-pill { display:inline-block; margin-top:8px; background:var(--green); color:white; font-size:11px; font-weight:700; padding:4px 14px; border-radius:99px; letter-spacing:.04em; }
+
+.hero-content { flex:1; }
+.hero-eyebrow { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
+.hero-title { font-size:28px; font-weight:800; color:white; line-height:1.2; margin-bottom:10px; }
+.hero-title span { color:var(--gold2); }
+.hero-desc { font-size:13px; color:#8890B0; line-height:1.7; max-width:560px; margin-bottom:24px; }
+.hero-stats { display:flex; gap:32px; flex-wrap:wrap; }
+.hstat-num { font-size:26px; font-weight:800; color:white; line-height:1; }
+.hstat-label { font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:#8890B0; margin-top:3px; }
+.hstat-sub { font-size:11px; color:#6870A0; margin-top:2px; }
+
+/* ── RISK CARDS ── */
+.risk-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.risk-card { background:var(--surface); border:1px solid var(--border); border-top:3px solid; border-radius:12px; padding:16px 18px; cursor:pointer; transition:box-shadow .2s,transform .2s; position:relative; }
+.risk-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.08); transform:translateY(-2px); }
+.risk-card.rc-red { border-top-color:var(--red-light); }
+.risk-card.rc-orange { border-top-color:var(--orange-light); }
+.risk-card.rc-yellow { border-top-color:var(--yellow-light); }
+.risk-card.rc-green { border-top-color:var(--green-light); }
+.rc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.rc-dot { width:9px; height:9px; border-radius:50%; }
+.rc-arrow { font-size:12px; color:var(--muted); }
+.rc-level { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.rc-num { font-size:36px; font-weight:800; line-height:1; margin-bottom:3px; }
+.rc-red .rc-num { color:var(--red); }
+.rc-orange .rc-num { color:var(--orange); }
+.rc-yellow .rc-num { color:var(--yellow); }
+.rc-green .rc-num { color:var(--green); }
+.rc-pct { font-size:12px; color:var(--text2); margin-bottom:8px; }
+.rc-divider { height:1px; background:var(--border); margin:10px 0; }
+.rc-action { font-size:11px; color:var(--text2); }
+
+/* ── TWO COL ── */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.three-col { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:16px; }
+
+/* ── CARD ── */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.card-title { font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+.card-title::before { content:''; width:3px; height:14px; background:var(--gold); border-radius:99px; }
+.card-meta { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+
+/* ── UNIDADE BARS ── */
+.unidade-list { display:flex; flex-direction:column; gap:14px; }
+.ub-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+.ub-name { font-size:13px; font-weight:600; color:var(--text); }
+.ub-total { font-size:11px; color:var(--muted); }
+.ub-bar { height:28px; border-radius:7px; overflow:hidden; display:flex; gap:2px; cursor:pointer; }
+.ub-seg { display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; transition:opacity .2s; }
+.ub-seg:hover { opacity:.85; }
+.ub-seg.verde { background:var(--green-light); }
+.ub-seg.amarelo { background:var(--yellow-light); }
+.ub-seg.laranja { background:var(--orange-light); }
+.ub-seg.vermelho { background:var(--red-light); }
+
+/* ── SINAIS ── */
+.sinais-list { display:flex; flex-direction:column; }
+.sinal-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.sinal-row:last-child { border-bottom:none; }
+.sinal-badge { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; flex-shrink:0; }
+.sinal-text { flex:1; font-size:12.5px; color:var(--text2); }
+.sinal-count { font-size:11px; color:var(--muted); white-space:nowrap; font-weight:600; }
+
+/* ── ALERTAS ── */
+.alerta-list { display:flex; flex-direction:column; gap:8px; }
+.alerta-item { background:var(--surface); border:1px solid var(--border); border-left:3px solid; border-radius:9px; padding:13px 16px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:box-shadow .2s,transform .15s; }
+.alerta-item:hover { box-shadow:0 3px 14px rgba(0,0,0,.07); transform:translateX(2px); }
+.alerta-item.red { border-left-color:var(--red-light); }
+.alerta-item.orange { border-left-color:var(--orange-light); }
+.alerta-info { flex:1; }
+.alerta-name { font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.alerta-unidade { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-right:8px; }
+.alerta-desc { font-size:11.5px; color:var(--text2); }
+.alerta-chips { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+.alerta-chip { font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; background:var(--red-bg); color:var(--red); letter-spacing:.04em; }
+.alerta-chip.orange { background:var(--orange-bg); color:var(--orange); }
+.alerta-arrow { font-size:14px; color:var(--muted); transition:transform .2s; }
+.alerta-item:hover .alerta-arrow { transform:translateX(3px); }
+
+/* ── STUDENT TABLE ── */
+.search-bar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.search-input { flex:1; min-width:200px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 14px 8px 36px; font-size:13px; font-family:var(--font); color:var(--text); outline:none; transition:border-color .2s; position:relative; }
+.search-wrap { flex:1; position:relative; min-width:200px; }
+.search-wrap::before { content:'⌕'; position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:16px; pointer-events:none; }
+.search-wrap input { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 14px 8px 36px; font-size:13px; font-family:var(--font); color:var(--text); outline:none; transition:border-color .2s; }
+.search-wrap input:focus { border-color:var(--gold); }
+.filter-select { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 14px; font-size:12px; font-family:var(--font); color:var(--text2); outline:none; cursor:pointer; }
+.btn-clear { background:var(--gold); color:white; border:none; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); white-space:nowrap; }
+
+.student-table { width:100%; border-collapse:collapse; }
+.student-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); padding:10px 12px; border-bottom:2px solid var(--border); text-align:left; white-space:nowrap; }
+.student-table td { padding:11px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.student-table tr:last-child td { border-bottom:none; }
+.student-table tr:hover td { background:#FAFBFC; }
+.student-table tr { cursor:pointer; }
+
+.st-avatar { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:white; flex-shrink:0; }
+.st-name { font-size:13px; font-weight:600; color:var(--text); }
+.st-mat { font-size:10px; color:var(--muted); }
+.risk-pill { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:99px; }
+.risk-pill.vermelho { background:var(--red-bg); color:var(--red); }
+.risk-pill.laranja { background:var(--orange-bg); color:var(--orange); }
+.risk-pill.amarelo { background:var(--yellow-bg); color:var(--yellow); }
+.risk-pill.verde { background:var(--green-bg); color:var(--green); }
+.risk-pill-dot { width:6px; height:6px; border-radius:50%; }
+.vermelho .risk-pill-dot { background:var(--red-light); }
+.laranja .risk-pill-dot { background:var(--orange-light); }
+.amarelo .risk-pill-dot { background:var(--yellow-light); }
+.verde .risk-pill-dot { background:var(--green-light); }
+
+.mini-bar { height:4px; background:var(--border); border-radius:99px; overflow:hidden; margin-top:3px; width:60px; }
+.mini-fill { height:100%; border-radius:99px; }
+
+.csat-chips { display:flex; gap:4px; }
+.csat-c { font-size:10px; font-weight:600; padding:2px 6px; border-radius:4px; }
+
+.nps-trail { display:flex; gap:2px; }
+.nps-dot { width:14px; height:14px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:800; }
+.nps-dot.P { background:var(--green-bg); color:var(--green); }
+.nps-dot.N { background:var(--yellow-bg); color:var(--yellow); }
+.nps-dot.D { background:var(--red-bg); color:var(--red); }
+
+/* ── HEATMAP ── */
+.heatmap-grid { display:flex; gap:12px; }
+.heatmap-labels { display:flex; flex-direction:column; gap:2px; padding-top:36px; }
+.heatmap-label { font-size:12px; font-weight:600; color:var(--text2); text-align:right; height:52px; display:flex; align-items:center; justify-content:flex-end; }
+.heatmap-cols { flex:1; overflow-x:auto; }
+.heatmap-header { display:flex; gap:2px; margin-bottom:2px; }
+.heatmap-week-label { font-size:9px; color:var(--muted); width:52px; text-align:center; flex-shrink:0; }
+.heatmap-row { display:flex; gap:2px; margin-bottom:2px; }
+.heatmap-cell { width:52px; height:50px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; cursor:pointer; transition:transform .15s; }
+.heatmap-cell:hover { transform:scale(1.05); }
+.hm-green { background:#DCFCE7; color:#16A34A; }
+.hm-yellow { background:#FEF9C3; color:#92660A; }
+.hm-orange { background:#FFEDD5; color:#C4570A; }
+.hm-red { background:#FEE2E2; color:#C0392B; }
+.heatmap-footer { display:flex; justify-content:space-between; margin-top:8px; font-size:10px; color:var(--muted); }
+.heatmap-footer .current { color:var(--gold); font-weight:700; }
+
+/* ── TREND SCORECARDS ── */
+.trend-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+.trend-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
+.tc-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:8px; }
+.tc-val { font-size:32px; font-weight:800; color:var(--navy); line-height:1; margin-bottom:4px; }
+.tc-delta { font-size:11px; font-weight:600; display:flex; align-items:center; gap:4px; margin-bottom:12px; }
+.tc-delta.pos { color:var(--green); }
+.tc-delta.neg { color:var(--red); }
+.tc-bars { display:flex; gap:3px; }
+.tc-bar { flex:1; height:24px; border-radius:4px; }
+
+/* ── LEITURA ── */
+.leitura-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
+.leitura-item { font-size:13px; color:var(--text2); line-height:1.75; margin-bottom:12px; }
+.leitura-item:last-child { margin-bottom:0; }
+.leitura-item strong { color:var(--text); }
+
+/* ── FONTES ── */
+.upload-zone { border:2px dashed var(--gold); border-radius:12px; padding:40px; text-align:center; background:#FFFDF5; margin-bottom:16px; cursor:pointer; transition:background .2s; }
+.upload-zone:hover { background:#FFF8E7; }
+.upload-icon { font-size:28px; color:var(--gold); margin-bottom:10px; }
+.upload-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px; }
+.upload-sub { font-size:12px; color:var(--text2); }
+.upload-code { font-size:11px; font-family:'Courier New',monospace; color:var(--muted); margin-top:8px; }
+
+.integrations-list { display:flex; flex-direction:column; gap:8px; }
+.integration-item { display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.int-icon { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+.int-info { flex:1; }
+.int-name { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.int-desc { font-size:11px; color:var(--muted); font-family:'Courier New',monospace; }
+.int-badge { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border-radius:99px; }
+.int-badge.connected { background:var(--green-bg); color:var(--green); }
+.int-badge.waiting { background:var(--yellow-bg); color:var(--yellow); }
+
+.pesquisas-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.pesquisa-item { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:9px; }
+.pesquisa-badge { width:44px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; background:#E8EEF8; color:var(--navy); flex-shrink:0; }
+.pesquisa-info { flex:1; }
+.pesquisa-name { font-size:13px; font-weight:600; color:var(--text); }
+.pesquisa-desc { font-size:11px; color:var(--muted); font-family:'Courier New',monospace; }
+.pesquisa-status { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--green); background:var(--green-bg); padding:3px 9px; border-radius:99px; }
+
+.add-pesquisa { display:flex; align-items:center; gap:14px; padding:14px 16px; border:2px dashed var(--gold); border-radius:10px; background:#FFFDF5; cursor:pointer; }
+.add-icon { width:36px; height:36px; border-radius:9px; background:var(--gold); display:flex; align-items:center; justify-content:center; font-size:18px; color:white; flex-shrink:0; }
+.add-info { flex:1; }
+.add-name { font-size:13px; font-weight:600; color:var(--text); }
+.add-desc { font-size:11px; color:var(--text2); }
+.btn-cadastrar { background:var(--gold); color:white; border:none; padding:8px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--font); }
+
+/* ── CATEGORIZAÇÃO ── */
+.cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.cat-card { border-radius:10px; padding:14px; }
+.cat-acad { background:#EEF2FF; border-left:3px solid #4F6EB4; }
+.cat-oper { background:#FEF0E0; border-left:3px solid #E07820; }
+.cat-emoc { background:#FEE8E6; border-left:3px solid #E53935; }
+.cat-rel { background:#E8F5EE; border-left:3px solid #2E7D52; }
+.cat-name { font-size:13px; font-weight:700; margin-bottom:6px; }
+.cat-acad .cat-name { color:#2D4A9E; }
+.cat-oper .cat-name { color:#B85A00; }
+.cat-emoc .cat-name { color:#C0392B; }
+.cat-rel .cat-name { color:#1B5E3F; }
+.cat-desc { font-size:11.5px; color:var(--text2); line-height:1.55; }
+
+/* ── CALIBRAÇÃO ── */
+.calib-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.calib-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+.calib-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; }
+.calib-total { font-size:11px; font-weight:700; background:var(--gold); color:white; padding:2px 9px; border-radius:99px; }
+
+.weight-row { margin-bottom:16px; }
+.weight-header { display:flex; justify-content:space-between; margin-bottom:4px; }
+.weight-name { font-size:12px; font-weight:600; color:var(--text); }
+.weight-pct { font-size:13px; font-weight:800; color:var(--gold); }
+.weight-sub { font-size:10px; color:var(--muted); margin-bottom:6px; }
+.weight-slider { width:100%; height:6px; appearance:none; background:var(--border); border-radius:99px; outline:none; cursor:pointer; }
+.weight-slider::-webkit-slider-thumb { appearance:none; width:16px; height:16px; border-radius:50%; background:var(--gold); border:2px solid white; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+
+.limiar-rows { display:flex; flex-direction:column; gap:8px; }
+.limiar-row { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:9px; }
+.limiar-row.verde { background:var(--green-bg); }
+.limiar-row.amarelo { background:var(--yellow-bg); }
+.limiar-row.laranja { background:var(--orange-bg); }
+.limiar-row.vermelho { background:var(--red-bg); }
+.limiar-pill { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; padding:3px 10px; border-radius:99px; width:80px; text-align:center; }
+.verde .limiar-pill { background:var(--green-light); color:white; }
+.amarelo .limiar-pill { background:var(--yellow-light); color:white; }
+.laranja .limiar-pill { background:var(--orange-light); color:white; }
+.vermelho .limiar-pill { background:var(--red-light); color:white; }
+.limiar-text { flex:1; font-size:12px; color:var(--text2); }
+.limiar-input { width:60px; background:white; border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:13px; font-weight:700; text-align:center; font-family:var(--font); outline:none; }
+.limiar-next { font-size:11px; color:var(--muted); }
+
+.calib-actions { display:flex; gap:10px; margin-top:16px; }
+.btn-reset { flex:1; background:var(--bg); border:1px solid var(--border); color:var(--text2); padding:10px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); }
+.btn-apply { flex:2; background:var(--gold); border:none; color:white; padding:10px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--font); }
+
+.impact-dist { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-top:16px; }
+.impact-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+.impact-card { text-align:center; padding:12px; border-radius:9px; }
+.impact-card.verde { background:var(--green-bg); }
+.impact-card.amarelo { background:var(--yellow-bg); }
+.impact-card.laranja { background:var(--orange-bg); }
+.impact-card.vermelho { background:var(--red-bg); }
+.ic-num { font-size:28px; font-weight:800; }
+.verde .ic-num { color:var(--green); }
+.amarelo .ic-num { color:var(--yellow); }
+.laranja .ic-num { color:var(--orange); }
+.vermelho .ic-num { color:var(--red); }
+.ic-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+.ic-pct { font-size:11px; color:var(--muted); }
+
+.dist-bar { height:28px; border-radius:8px; overflow:hidden; display:flex; margin-bottom:8px; }
+.dist-seg { display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:white; }
+
+.protocolo-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px; }
+.proto-card { border-radius:9px; padding:14px; }
+.proto-card.verde { background:var(--green-bg); border:1px solid rgba(46,125,82,.2); }
+.proto-card.amarelo { background:var(--yellow-bg); border:1px solid rgba(154,104,0,.2); }
+.proto-card.laranja { background:var(--orange-bg); border:1px solid rgba(184,90,0,.2); }
+.proto-card.vermelho { background:var(--red-bg); border:1px solid rgba(192,57,43,.2); }
+.proto-level { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+.verde .proto-level { color:var(--green); }
+.amarelo .proto-level { color:var(--yellow); }
+.laranja .proto-level { color:var(--orange); }
+.vermelho .proto-level { color:var(--red); }
+.proto-text { font-size:12px; color:var(--text2); line-height:1.55; }
+
+/* ── MODAL ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:500; display:none; }
+.modal-overlay.open { display:flex; align-items:flex-start; justify-content:flex-end; }
+.modal { width:580px; height:100vh; background:var(--surface); overflow-y:auto; box-shadow:-8px 0 40px rgba(0,0,0,.15); animation:slideIn .3s ease; }
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+
+.modal-topbar { background:var(--navy); padding:0; position:sticky; top:0; z-index:10; }
+.modal-header { padding:16px 20px 12px; display:flex; gap:14px; align-items:flex-start; }
+.modal-avatar { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:white; flex-shrink:0; }
+.modal-info { flex:1; }
+.modal-breadcrumb { font-size:10px; color:#8890B0; letter-spacing:.07em; text-transform:uppercase; margin-bottom:4px; }
+.modal-name { font-size:22px; font-weight:800; color:white; line-height:1.2; margin-bottom:6px; }
+.modal-pills { display:flex; gap:8px; flex-wrap:wrap; }
+.modal-pill { font-size:11px; font-weight:600; padding:3px 12px; border-radius:99px; }
+.mpill-red { background:rgba(239,68,68,.25); color:#FCA5A5; }
+.mpill-score { background:rgba(201,151,58,.25); color:#FCD34D; }
+.mpill-date { background:rgba(255,255,255,.1); color:#8890B0; }
+.modal-close { background:rgba(255,255,255,.1); border:none; color:white; width:30px; height:30px; border-radius:8px; font-size:14px; cursor:pointer; font-family:var(--font); flex-shrink:0; margin-top:4px; }
+
+.modal-tabs { display:flex; padding:0 20px; border-bottom:1px solid rgba(255,255,255,.1); }
+.modal-tab { padding:10px 14px; font-size:12px; font-weight:500; color:#8890B0; cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; user-select:none; }
+.modal-tab:hover { color:white; }
+.modal-tab.active { color:var(--gold2); border-bottom-color:var(--gold2); font-weight:600; }
+
+.modal-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
+
+.modal-tab-content { display:none; }
+.modal-tab-content.active { display:flex; flex-direction:column; gap:14px; }
+
+/* analise sintetica */
+.analise-block { background:var(--yellow-bg); border:1px solid rgba(154,104,0,.2); border-left:3px solid var(--yellow-light); border-radius:10px; padding:14px 16px; }
+.analise-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--gold); margin-bottom:6px; }
+.analise-text { font-size:13px; color:var(--text); line-height:1.65; }
+.analise-text strong { color:var(--text); }
+
+/* ind grid */
+.ind-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ind-card2 { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px; }
+.ind-label2 { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:6px; }
+.ind-val2 { font-size:28px; font-weight:800; color:var(--red); line-height:1; margin-bottom:3px; }
+.ind-val2.ok { color:var(--green); }
+.ind-val2.warn { color:var(--yellow); }
+.ind-sub2 { font-size:11px; color:var(--text2); }
+
+/* sinais ativos */
+.sinais-ativos2 { display:flex; flex-direction:column; }
+.sa-row { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--border); }
+.sa-row:last-child { border-bottom:none; }
+.sa-left { display:flex; align-items:center; gap:8px; }
+.sa-dot2 { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.sa-text { font-size:12px; color:var(--text2); }
+.sa-date { font-size:10px; color:var(--muted); font-weight:600; }
+
+/* plano ia */
+.plano-ia { border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.plano-ia-header { background:var(--navy); padding:12px 16px; display:flex; align-items:center; gap:8px; }
+.plano-ia-badge { background:rgba(201,151,58,.2); border:1px solid rgba(201,151,58,.3); color:var(--gold2); font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; padding:3px 10px; border-radius:99px; }
+.plano-title { font-size:14px; font-weight:700; color:var(--text); padding:14px 16px 6px; line-height:1.4; }
+.plano-desc { font-size:12px; color:var(--text2); padding:0 16px 14px; line-height:1.65; border-bottom:1px solid var(--border); }
+.plano-steps { padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+.plano-step { display:flex; gap:12px; }
+.ps-num { width:24px; height:24px; background:var(--navy); color:white; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0; }
+.ps-content { }
+.ps-text { font-size:12.5px; color:var(--text); line-height:1.5; }
+.ps-text strong { color:var(--text); }
+.ps-tag { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.plano-footer { padding:10px 16px; border-top:1px solid var(--border); font-size:10px; color:var(--muted); font-style:italic; }
+
+/* tratativas */
+.tratativa-form2 { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px; }
+.tf-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; }
+.tf-fields { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
+.tf-field { display:flex; flex-direction:column; gap:4px; }
+.tf-field label { font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+.tf-field input, .tf-field select { background:white; border:1px solid var(--border); border-radius:7px; padding:7px 10px; font-size:12px; font-family:var(--font); color:var(--text); outline:none; transition:border-color .2s; }
+.tf-field input:focus, .tf-field select:focus { border-color:var(--gold); }
+.tf-textarea { width:100%; background:white; border:1px solid var(--border); border-radius:7px; padding:8px 10px; font-size:12px; font-family:var(--font); color:var(--text); resize:vertical; min-height:70px; outline:none; }
+.tf-textarea:focus { border-color:var(--gold); }
+.tf-footer2 { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+.tf-note { font-size:10px; color:var(--muted); font-style:italic; }
+.btn-registrar { background:var(--navy); color:white; border:none; padding:8px 16px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--font); }
+.trat-empty2 { text-align:center; padding:18px; color:var(--muted); font-size:12px; }
+
+/* voz */
+.voz-block2 { background:var(--navy); border-radius:10px; padding:14px 16px; }
+.voz-label2 { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#8890B0; margin-bottom:8px; }
+.voz-text2 { font-size:13px; color:white; line-height:1.65; }
+.voz-text2 em { font-style:normal; color:var(--gold2); font-weight:600; }
+.voz-footer2 { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
+.voz-chip2 { font-size:10px; color:#8890B0; }
+
+.sent-bar2 { height:24px; border-radius:7px; overflow:hidden; display:flex; margin-bottom:8px; }
+.sent-seg2 { display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:white; }
+
+.motbar-list { display:flex; flex-direction:column; gap:8px; }
+.motbar-row { }
+.motbar-top { display:flex; justify-content:space-between; margin-bottom:3px; }
+.motbar-name { font-size:12px; color:var(--text2); display:flex; align-items:center; gap:6px; }
+.motbar-dot { width:8px; height:8px; border-radius:2px; display:inline-block; }
+.motbar-pct { font-size:11px; font-weight:700; color:var(--text); }
+.motbar-track { height:5px; background:var(--border); border-radius:99px; overflow:hidden; }
+.motbar-fill { height:100%; border-radius:99px; }
+
+.citacao2 { border:1px solid var(--border); border-radius:9px; padding:12px 14px; }
+.cit-header2 { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+.cit-cat2 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#4F6EB4; background:#EEF2FF; padding:2px 8px; border-radius:4px; }
+.cit-arr { color:var(--muted); font-size:11px; }
+.cit-sub2 { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--text2); background:var(--bg); border:1px solid var(--border); padding:2px 8px; border-radius:4px; }
+.cit-badge2 { margin-left:auto; font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; background:var(--red-bg); color:var(--red); }
+.cit-text2 { font-size:12.5px; color:var(--text); line-height:1.65; font-style:italic; margin-bottom:6px; }
+.cit-source2 { font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+
+.ia-badge2 { display:inline-flex; align-items:center; gap:4px; background:var(--yellow-bg); color:var(--yellow); font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px; letter-spacing:.06em; text-transform:uppercase; }
+.modal-sec-title { font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  /* topbar */
+  .topbar{padding:0 14px;height:auto;min-height:52px;flex-wrap:wrap;gap:6px;padding-top:8px;padding-bottom:8px}
+  .topbar-title{font-size:11px}
+  .topbar-sub{font-size:9px}
+  .topbar-status{font-size:10px}
+  .btn-export{padding:5px 10px;font-size:11px}
+
+  /* tabs — horizontal scroll */
+  .tabs{padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{padding:12px 14px;font-size:11px;flex-shrink:0;white-space:nowrap}
+
+  /* page */
+  .page{padding:12px}
+
+  /* hero banner */
+  .hero-banner{flex-direction:column;padding:20px;gap:20px}
+  .hero-gauge{width:100%;text-align:center}
+  .gauge-wrap{margin:0 auto}
+  .hero-title{font-size:20px}
+  .hero-desc{font-size:12px}
+  .hero-stats{gap:16px;flex-wrap:wrap}
+  .hstat-num{font-size:20px}
+
+  /* risk cards — 2 col on mobile */
+  .risk-cards{grid-template-columns:repeat(2,1fr);gap:8px}
+  .rc-num{font-size:28px}
+
+  /* two/three col */
+  .two-col,.three-col,.cat-grid,.calib-grid,.protocolo-grid,.impact-cards{grid-template-columns:1fr}
+
+  /* trend cards */
+  .trend-cards{grid-template-columns:1fr}
+
+  /* heatmap */
+  .heatmap-grid{gap:4px}
+  .heatmap-label{font-size:10px;height:40px}
+  .heatmap-cell{width:30px;height:38px;font-size:10px;border-radius:5px}
+  .heatmap-week-label{width:30px;font-size:8px}
+
+  /* student table — hide less important cols */
+  .student-table th:nth-child(6),
+  .student-table td:nth-child(6),
+  .student-table th:nth-child(8),
+  .student-table td:nth-child(8),
+  .student-table th:nth-child(9),
+  .student-table td:nth-child(9){display:none}
+  .student-table{font-size:11px}
+  .student-table th,.student-table td{padding:8px 8px}
+  .st-name{font-size:12px}
+  .st-mat{display:none}
+  .st-avatar{width:26px;height:26px;font-size:9px;border-radius:7px}
+
+  /* search */
+  .search-bar{flex-direction:column;gap:8px}
+  .search-wrap{min-width:0}
+  .filter-select{width:100%}
+  .btn-clear{width:100%}
+
+  /* modal — full screen */
+  .modal-overlay.open{align-items:flex-end}
+  .modal{width:100%;height:92vh;border-radius:16px 16px 0 0}
+  .modal-name{font-size:17px}
+  .modal-tabs{gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .modal-tabs::-webkit-scrollbar{display:none}
+  .modal-tab{padding:10px 12px;font-size:11px;flex-shrink:0;white-space:nowrap}
+
+  /* modal body */
+  .ind-grid2{grid-template-columns:1fr 1fr}
+  .tf-fields{grid-template-columns:1fr}
+
+  /* calib */
+  .calib-grid{grid-template-columns:1fr}
+  .protocolo-grid{grid-template-columns:1fr 1fr}
+  .impact-cards{grid-template-columns:repeat(2,1fr)}
+
+  /* alerta chips */
+  .alerta-chips{flex-direction:column;gap:4px}
+  .alerta-item{flex-wrap:wrap}
+
+  /* upload zone */
+  .upload-zone{padding:24px 16px}
+
+  /* leitura */
+  .leitura-card{padding:14px}
+  .leitura-item{font-size:12px}
+}
+
+@media(max-width:400px){
+  .risk-cards{grid-template-columns:1fr}
+  .protocolo-grid{grid-template-columns:1fr}
+  .impact-cards{grid-template-columns:1fr 1fr}
+  .hero-banner{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">M</div>
+    <div class="topbar-info">
+      <div class="topbar-title">Projeto Sentinela · Monitoramento de Clima</div>
+      <div class="topbar-sub">Customer Experience · São Leopoldo Mandic</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-status">
+      <div class="status-dot"></div>
+      Atualizado · 29.abr.2026 · 08:14
+    </div>
+    <button class="btn-export">Exportar</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('farol')"><span class="tab-num">01</span> Farol de Risco</div>
+  <div class="tab" onclick="switchTab('alunos')"><span class="tab-num">02</span> Alunos</div>
+  <div class="tab" onclick="switchTab('tendencias')"><span class="tab-num">03</span> Tendências</div>
+  <div class="tab" onclick="switchTab('fontes')"><span class="tab-num">04</span> Fontes & Dados</div>
+  <div class="tab" onclick="switchTab('calibracao')"><span class="tab-num">05</span> Calibração</div>
+</div>
+
+<!-- ══════════ TAB 1: FAROL ══════════ -->
+<div class="tab-content active" id="tab-farol">
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero-banner">
+    <div class="hero-gauge">
+      <div class="gauge-wrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="14"/>
+          <circle cx="70" cy="70" r="58" fill="none" stroke="#22C55E" stroke-width="14"
+            stroke-dasharray="364.4" stroke-dashoffset="328" stroke-linecap="round"
+            transform="rotate(-90 70 70)"/>
+        </svg>
+        <div class="gauge-label">ÍNDICE DE RISCO</div>
+        <div class="gauge-num">12</div>
+      </div>
+      <div class="gauge-status-text">alunos em risco ativo</div>
+      <div class="gauge-pill">ESTÁVEL</div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Risco de Clima · Turma ENAMED 2026</div>
+      <div class="hero-title">Monitoramento de <span>Clima Pré-ENAMED</span></div>
+      <div class="hero-desc">Painel integrado de risco e engajamento dos alunos da Medicina, cruzando indicadores acadêmicos (simulado, presença, Medway), de experiência (CSAT, NPS) e de voz (categorização IA dos comentários) com camada de tratativas e plano de ação.</div>
+      <div class="hero-stats">
+        <div><div class="hstat-num">200</div><div class="hstat-label">Alunos acompanhados</div></div>
+        <div><div class="hstat-num">4</div><div class="hstat-label">Unidades</div><div class="hstat-sub">Araras · Campinas · Arcoverde · Limeira</div></div>
+        <div><div class="hstat-num">7</div><div class="hstat-label">Indicadores ativos</div></div>
+        <div><div class="hstat-num">~24 sem</div><div class="hstat-label">Até a prova</div><div class="hstat-sub">Out/2026</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RISK CARDS -->
+  <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+    <span style="display:flex;align-items:center;gap:8px"><span style="width:3px;height:14px;background:var(--gold);border-radius:99px;display:inline-block"></span>Distribuição de risco · clique para ver alunos</span>
+    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Protocolo Institucional</span>
+  </div>
+  <div class="risk-cards">
+    <div class="risk-card rc-red" onclick="filterAndGoAlunos('vermelho')">
+      <div class="rc-header"><div class="rc-dot" style="background:var(--red-light)"></div><div class="rc-arrow">→</div></div>
+      <div class="rc-level">Vermelho</div>
+      <div class="rc-num">2</div>
+      <div class="rc-pct">1% da turma</div>
+      <div class="rc-divider"></div>
+      <div class="rc-action">Comitê em 48h</div>
+    </div>
+    <div class="risk-card rc-orange" onclick="filterAndGoAlunos('laranja')">
+      <div class="rc-header"><div class="rc-dot" style="background:var(--orange-light)"></div><div class="rc-arrow">→</div></div>
+      <div class="rc-level">Laranja</div>
+      <div class="rc-num">9</div>
+      <div class="rc-pct">5% da turma</div>
+      <div class="rc-divider"></div>
+      <div class="rc-action">Conversa em 7 dias</div>
+    </div>
+    <div class="risk-card rc-yellow" onclick="filterAndGoAlunos('amarelo')">
+      <div class="rc-header"><div class="rc-dot" style="background:var(--yellow-light)"></div><div class="rc-arrow">→</div></div>
+      <div class="rc-level">Amarelo</div>
+      <div class="rc-num">23</div>
+      <div class="rc-pct">12% da turma</div>
+      <div class="rc-divider"></div>
+      <div class="rc-action">Revisita em 14 dias</div>
+    </div>
+    <div class="risk-card rc-green" onclick="filterAndGoAlunos('verde')">
+      <div class="rc-header"><div class="rc-dot" style="background:var(--green-light)"></div><div class="rc-arrow">→</div></div>
+      <div class="rc-level">Verde</div>
+      <div class="rc-num">166</div>
+      <div class="rc-pct">83% da turma</div>
+      <div class="rc-divider"></div>
+      <div class="rc-action">Monitoramento padrão</div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE + SINAIS -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Performance por unidade</div><div class="card-meta">Clique nos blocos</div></div>
+      <div class="unidade-list">
+        <div>
+          <div class="ub-top"><span class="ub-name">Araras</span><span class="ub-total">62 alunos</span></div>
+          <div class="ub-bar">
+            <div class="ub-seg verde" style="flex:51">51</div>
+            <div class="ub-seg amarelo" style="flex:8">8</div>
+            <div class="ub-seg laranja" style="flex:3" title="3 laranja"></div>
+          </div>
+        </div>
+        <div>
+          <div class="ub-top"><span class="ub-name">Campinas</span><span class="ub-total">52 alunos</span></div>
+          <div class="ub-bar">
+            <div class="ub-seg verde" style="flex:44">44</div>
+            <div class="ub-seg amarelo" style="flex:4">4</div>
+            <div class="ub-seg laranja" style="flex:3"></div>
+            <div class="ub-seg vermelho" style="flex:1"></div>
+          </div>
+        </div>
+        <div>
+          <div class="ub-top"><span class="ub-name">Arcoverde</span><span class="ub-total">43 alunos</span></div>
+          <div class="ub-bar">
+            <div class="ub-seg verde" style="flex:33">33</div>
+            <div class="ub-seg amarelo" style="flex:7">7</div>
+            <div class="ub-seg laranja" style="flex:2"></div>
+            <div class="ub-seg vermelho" style="flex:1"></div>
+          </div>
+        </div>
+        <div>
+          <div class="ub-top"><span class="ub-name">Limeira</span><span class="ub-total">43 alunos</span></div>
+          <div class="ub-bar">
+            <div class="ub-seg verde" style="flex:38">38</div>
+            <div class="ub-seg amarelo" style="flex:4">4</div>
+            <div class="ub-seg laranja" style="flex:1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Sinais mais frequentes</div><div class="card-meta">Últimas 4 semanas</div></div>
+      <div class="sinais-list">
+        <div class="sinal-row">
+          <div class="sinal-badge" style="background:#EEF2FF;color:#4F6EB4">i</div>
+          <div class="sinal-text">Queda em simulado vs. histórico próprio</div>
+          <div class="sinal-count">22 alunos</div>
+        </div>
+        <div class="sinal-row">
+          <div class="sinal-badge" style="background:#FEF9E4;color:#9A6800">ii</div>
+          <div class="sinal-text">Conclusão Medway abaixo de 40%</div>
+          <div class="sinal-count">16 alunos</div>
+        </div>
+        <div class="sinal-row">
+          <div class="sinal-badge" style="background:#EEF2FF;color:#4F6EB4">iii</div>
+          <div class="sinal-text">CSAT preparatórias em queda</div>
+          <div class="sinal-count">25 alunos</div>
+        </div>
+        <div class="sinal-row">
+          <div class="sinal-badge" style="background:#FEF0E0;color:#B85A00">iv</div>
+          <div class="sinal-text">NPS atual = Detrator</div>
+          <div class="sinal-count">33 alunos</div>
+        </div>
+        <div class="sinal-row">
+          <div class="sinal-badge" style="background:#FEF0E0;color:#B85A00">v</div>
+          <div class="sinal-text">Presença em simulado abaixo de 75%</div>
+          <div class="sinal-count">14 alunos</div>
+        </div>
+        <div class="sinal-row">
+          <div class="sinal-badge" style="background:#FEE8E6;color:#C0392B">vi</div>
+          <div class="sinal-text">Sinal emocional em comentário aberto</div>
+          <div class="sinal-count">8 alunos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTAS -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header">
+      <div class="card-title">Alertas prioritários · ação esta semana</div>
+      <div class="card-meta">Vermelho + Laranja</div>
+    </div>
+    <div class="alerta-list">
+      <div class="alerta-item red" onclick="openModal('ricardo')">
+        <div class="alerta-info">
+          <div class="alerta-name"><span class="alerta-unidade">Campinas</span> Ricardo Silva</div>
+          <div class="alerta-desc">Score 78 · Última nota simulado: 29 · Presença 25% · CSAT 2.9</div>
+          <div class="alerta-chips">
+            <span class="alerta-chip">Score composto crítico (≥75)</span>
+            <span class="alerta-chip">CSAT preparatórias mínimo: 2.9/5</span>
+            <span class="alerta-chip">Detrator no NPS atual</span>
+          </div>
+        </div>
+        <div class="alerta-arrow">→</div>
+      </div>
+      <div class="alerta-item red" onclick="openModal('arthur')">
+        <div class="alerta-info">
+          <div class="alerta-name"><span class="alerta-unidade">Arcoverde</span> Arthur Souza</div>
+          <div class="alerta-desc">Score 75 · Última nota simulado: 35 · Presença 0% · CSAT 1.8</div>
+          <div class="alerta-chips">
+            <span class="alerta-chip">Score composto crítico (≥75)</span>
+            <span class="alerta-chip">CSAT preparatórias mínimo: 1.8/5</span>
+            <span class="alerta-chip">Detrator no NPS atual</span>
+          </div>
+        </div>
+        <div class="alerta-arrow">→</div>
+      </div>
+      <div class="alerta-item orange" onclick="openModal('manuela')">
+        <div class="alerta-info">
+          <div class="alerta-name"><span class="alerta-unidade">Araras</span> Manuela Ramos</div>
+          <div class="alerta-desc">Score 74 · Última nota simulado: 20 · Presença 75% · CSAT 2.0</div>
+          <div class="alerta-chips">
+            <span class="alerta-chip orange">Score composto crítico (≥75)</span>
+            <span class="alerta-chip orange">CSAT preparatórias mínimo: 2/5</span>
+            <span class="alerta-chip orange">Detrator no NPS atual</span>
+          </div>
+        </div>
+        <div class="alerta-arrow">→</div>
+      </div>
+      <div class="alerta-item orange" onclick="openModal('mariana')">
+        <div class="alerta-info">
+          <div class="alerta-name"><span class="alerta-unidade">Arcoverde</span> Mariana Moraes</div>
+          <div class="alerta-desc">Score 70 · Última nota simulado: 31 · Presença 50% · CSAT 2.2</div>
+          <div class="alerta-chips">
+            <span class="alerta-chip orange">Score composto crítico</span>
+            <span class="alerta-chip orange">CSAT preparatórias mínimo: 2.2/5</span>
+            <span class="alerta-chip orange">Detrator no NPS atual</span>
+          </div>
+        </div>
+        <div class="alerta-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════ TAB 2: ALUNOS ══════════ -->
+<div class="tab-content" id="tab-alunos">
+<div class="page">
+  <div style="margin-bottom:20px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:6px">02 · Lista Nominal</div>
+    <div style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px">Alunos acompanhados</div>
+    <div style="font-size:13px;color:var(--text2)">Clique em qualquer aluno para abrir o perfil completo com simulado, presença, Medway, NPS, comentários e tratativas.</div>
+  </div>
+  <div class="search-bar">
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Buscar por nome, matrícula ou email..." oninput="filterStudents()">
+    </div>
+    <select class="filter-select" id="filterUnidade" onchange="filterStudents()">
+      <option value="">Todas unidades</option>
+      <option>Campinas</option><option>Arcoverde</option><option>Araras</option><option>Limeira</option>
+    </select>
+    <select class="filter-select" id="filterRisco" onchange="filterStudents()">
+      <option value="">Todos riscos</option>
+      <option>Vermelho</option><option>Laranja</option><option>Amarelo</option><option>Verde</option>
+    </select>
+    <select class="filter-select" id="filterTrat" onchange="filterStudents()">
+      <option value="">Tratativas (todas)</option>
+      <option>Com tratativa</option><option>Sem tratativa</option>
+    </select>
+    <button class="btn-clear" onclick="clearFilters()">Limpar filtros</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="student-table">
+      <thead>
+        <tr>
+          <th>Aluno</th><th>Unidade</th><th>Risco</th>
+          <th>Simulado</th><th>Presença</th><th>Medway</th>
+          <th>CSATs</th><th>NPS Trail</th><th>Tratativas</th>
+        </tr>
+      </thead>
+      <tbody id="studentTableBody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB 3: TENDÊNCIAS ══════════ -->
+<div class="tab-content" id="tab-tendencias">
+<div class="page">
+  <div style="margin-bottom:20px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:6px">03 · Trajetória 12 Semanas</div>
+    <div style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px">Tendências por unidade</div>
+    <div style="font-size:13px;color:var(--text2)">Evolução semanal do percentual de alunos em risco (laranja+vermelho) por unidade. Cada célula representa uma semana.</div>
+  </div>
+
+  <div class="trend-cards">
+    <div class="trend-card">
+      <div class="tc-label">NPS Agregado · Turma</div>
+      <div class="tc-val">+34</div>
+      <div class="tc-delta neg">▼ -8 pts vs. ciclo anterior</div>
+      <div class="tc-bars">
+        <div class="tc-bar" style="background:#22C55E"></div>
+        <div class="tc-bar" style="background:#22C55E"></div>
+        <div class="tc-bar" style="background:#D4A017"></div>
+        <div class="tc-bar" style="background:#D4A017"></div>
+        <div class="tc-bar" style="background:#D4A017"></div>
+      </div>
+    </div>
+    <div class="trend-card">
+      <div class="tc-label">Performance Simulados</div>
+      <div class="tc-val">62,4</div>
+      <div class="tc-delta pos">▲ +3,1 vs. simulado anterior</div>
+      <div class="tc-bars">
+        <div class="tc-bar" style="background:#D4A017"></div>
+        <div class="tc-bar" style="background:#D4A017"></div>
+        <div class="tc-bar" style="background:#22C55E"></div>
+      </div>
+    </div>
+    <div class="trend-card">
+      <div class="tc-label">Conclusão Medway</div>
+      <div class="tc-val">71%</div>
+      <div class="tc-delta pos">▲ +5 pp na última semana</div>
+      <div class="tc-bars">
+        <div class="tc-bar" style="background:#E53935"></div>
+        <div class="tc-bar" style="background:#D4A017"></div>
+        <div class="tc-bar" style="background:#D4A017"></div>
+        <div class="tc-bar" style="background:#22C55E"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;overflow-x:auto">
+    <div class="card-header"><div class="card-title">Heatmap de risco semanal</div><div class="card-meta">% alunos laranja+vermelho</div></div>
+    <div class="heatmap-grid">
+      <div class="heatmap-labels">
+        <div class="heatmap-label">Araras</div>
+        <div class="heatmap-label">Campinas</div>
+        <div class="heatmap-label">Arcoverde</div>
+        <div class="heatmap-label">Limeira</div>
+      </div>
+      <div class="heatmap-cols">
+        <div class="heatmap-header">
+          <div class="heatmap-week-label">S6</div><div class="heatmap-week-label">S7</div><div class="heatmap-week-label">S8</div>
+          <div class="heatmap-week-label">S9</div><div class="heatmap-week-label">S10</div><div class="heatmap-week-label">S11</div>
+          <div class="heatmap-week-label">S12</div><div class="heatmap-week-label">S13</div><div class="heatmap-week-label">S14</div>
+          <div class="heatmap-week-label">S15</div><div class="heatmap-week-label">S16</div><div class="heatmap-week-label" style="color:var(--gold);font-weight:700">S17</div>
+        </div>
+        <div class="heatmap-row">
+          <div class="heatmap-cell hm-green">6</div><div class="heatmap-cell hm-green">7</div><div class="heatmap-cell hm-green">9</div>
+          <div class="heatmap-cell hm-green">3</div><div class="heatmap-cell hm-green">6</div><div class="heatmap-cell hm-yellow">12</div>
+          <div class="heatmap-cell hm-yellow">14</div><div class="heatmap-cell hm-orange">15</div><div class="heatmap-cell hm-green">9</div>
+          <div class="heatmap-cell hm-yellow">14</div><div class="heatmap-cell hm-yellow">10</div><div class="heatmap-cell hm-orange" style="border:2px solid var(--gold)">15</div>
+        </div>
+        <div class="heatmap-row">
+          <div class="heatmap-cell hm-orange">15</div><div class="heatmap-cell hm-yellow">12</div><div class="heatmap-cell hm-green">8</div>
+          <div class="heatmap-cell hm-yellow">13</div><div class="heatmap-cell hm-orange">16</div><div class="heatmap-cell hm-orange">15</div>
+          <div class="heatmap-cell hm-yellow">14</div><div class="heatmap-cell hm-yellow">12</div><div class="heatmap-cell hm-orange">16</div>
+          <div class="heatmap-cell hm-orange">19</div><div class="heatmap-cell hm-orange">19</div><div class="heatmap-cell hm-orange" style="border:2px solid var(--gold)">15</div>
+        </div>
+        <div class="heatmap-row">
+          <div class="heatmap-cell hm-orange">16</div><div class="heatmap-cell hm-red">22</div><div class="heatmap-cell hm-orange">20</div>
+          <div class="heatmap-cell hm-orange">18</div><div class="heatmap-cell hm-red">23</div><div class="heatmap-cell hm-orange">18</div>
+          <div class="heatmap-cell hm-red">27</div><div class="heatmap-cell hm-red">27</div><div class="heatmap-cell hm-orange">20</div>
+          <div class="heatmap-cell hm-orange">20</div><div class="heatmap-cell hm-orange">16</div><div class="heatmap-cell hm-red" style="border:2px solid var(--gold)">26</div>
+        </div>
+        <div class="heatmap-row">
+          <div class="heatmap-cell hm-orange">18</div><div class="heatmap-cell hm-yellow">12</div><div class="heatmap-cell hm-green">9</div>
+          <div class="heatmap-cell hm-yellow">12</div><div class="heatmap-cell hm-yellow">11</div><div class="heatmap-cell hm-orange">15</div>
+          <div class="heatmap-cell hm-yellow">10</div><div class="heatmap-cell hm-yellow">11</div><div class="heatmap-cell hm-orange">16</div>
+          <div class="heatmap-cell hm-green">9</div><div class="heatmap-cell hm-yellow">14</div><div class="heatmap-cell hm-yellow" style="border:2px solid var(--gold)">10</div>
+        </div>
+        <div class="heatmap-footer">
+          <span>← Fev/2026</span><span class="current">Semana atual · S17</span><span>Abr/2026 →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="leitura-card">
+    <div class="card-header" style="margin-bottom:12px"><div class="card-title">Leitura do que importa</div></div>
+    <div class="leitura-item"><strong>Arcoverde concentra o risco.</strong> Unidade com 18% dos alunos em risco laranja+vermelho — quase o dobro da média da rede (10%). Investigar se é efeito de coorte ou problema operacional específico.</div>
+    <div class="leitura-item"><strong>CSAT em queda destoa de presença estável.</strong> Alunos continuam comparecendo, mas avaliam pior. Sinal típico de fadiga ou problema pontual de qualidade — não desengajamento.</div>
+    <div class="leitura-item"><strong>Engajamento Medway crescente.</strong> Conclusão de exercícios subiu 5pp na última semana — sinal positivo de que a turma está intensificando preparo para o ENAMED.</div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB 4: FONTES ══════════ -->
+<div class="tab-content" id="tab-fontes">
+<div class="page">
+  <div style="margin-bottom:20px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:6px">04 · Origem dos Dados</div>
+    <div style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px">Fontes & Integrações</div>
+    <div style="font-size:13px;color:var(--text2)">Configure como os dados chegam ao painel. Notas de simulado e presença chegam via upload mensal de planilha. Medway e INDECX são integrações automáticas.</div>
+  </div>
+
+  <div class="upload-zone">
+    <div class="upload-icon">↑</div>
+    <div class="upload-title">Upload mensal de planilha · Simulado + Presença</div>
+    <div class="upload-sub">Arraste a planilha aqui ou clique para selecionar</div>
+    <div class="upload-code">.xlsx · .csv · até 5MB · Última atualização: 15/04/2026</div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header"><div class="card-title">Integrações automáticas</div><div class="card-meta">Conexões ativas</div></div>
+    <div class="integrations-list">
+      <div class="integration-item">
+        <div class="int-icon" style="background:var(--yellow-bg);color:var(--yellow)">M</div>
+        <div class="int-info">
+          <div class="int-name">Medway · Plataforma de exercícios</div>
+          <div class="int-desc">Login dos alunos · % conclusão dos exercícios · sincronização diária</div>
+        </div>
+        <div class="int-badge connected">Conectado</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-icon" style="background:#E8EEF8;color:var(--navy)">I</div>
+        <div class="int-info">
+          <div class="int-name">INDECX · Gestão de pesquisas</div>
+          <div class="int-desc">NPS, CSAT, comentários abertos · API REST · sync a cada 6h</div>
+        </div>
+        <div class="int-badge connected">Conectado</div>
+      </div>
+      <div class="integration-item">
+        <div class="int-icon" style="background:var(--green-bg);color:var(--green);font-size:10px">XLS</div>
+        <div class="int-info">
+          <div class="int-name">Planilha mensal · Simulado e Presença</div>
+          <div class="int-desc">Upload manual pela coordenação · próximo: 15/05/2026</div>
+        </div>
+        <div class="int-badge waiting">Aguardando upload</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header"><div class="card-title">Pesquisas INDECX ativas</div></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">O painel está estruturado para receber novas pesquisas (CSAT ou NPS) caso sejam realizadas até o ENAMED. Cada nova pesquisa aparece automaticamente no perfil do aluno e contribui para o cálculo do score composto.</div>
+    <div class="pesquisas-list">
+      <div class="pesquisa-item">
+        <div class="pesquisa-badge">CSAT</div>
+        <div class="pesquisa-info">
+          <div class="pesquisa-name">CSAT Aulas Preparatórias</div>
+          <div class="pesquisa-desc">Escala 1-5 · aplicada a cada aula preparatória · sync via INDECX</div>
+        </div>
+        <div class="pesquisa-status">Ativa</div>
+      </div>
+      <div class="pesquisa-item">
+        <div class="pesquisa-badge">CSAT</div>
+        <div class="pesquisa-info">
+          <div class="pesquisa-name">CSAT Internato Semanal</div>
+          <div class="pesquisa-desc">Escala 1-5 · pulse semanal durante internato · sync via INDECX</div>
+        </div>
+        <div class="pesquisa-status">Ativa</div>
+      </div>
+      <div class="pesquisa-item">
+        <div class="pesquisa-badge">CSAT</div>
+        <div class="pesquisa-info">
+          <div class="pesquisa-name">CSAT Internato Mensal</div>
+          <div class="pesquisa-desc">Escala 1-5 · consolidado mensal · sync via INDECX</div>
+        </div>
+        <div class="pesquisa-status">Ativa</div>
+      </div>
+      <div class="pesquisa-item">
+        <div class="pesquisa-badge">NPS</div>
+        <div class="pesquisa-info">
+          <div class="pesquisa-name">NPS · Ciclo 26.1</div>
+          <div class="pesquisa-desc">Escala 0-10 · aplicada por ciclo letivo · sync via INDECX</div>
+        </div>
+        <div class="pesquisa-status">Ativa</div>
+      </div>
+    </div>
+    <div class="add-pesquisa" style="margin-top:10px">
+      <div class="add-icon">+</div>
+      <div class="add-info">
+        <div class="add-name">Adicionar nova pesquisa</div>
+        <div class="add-desc">Caso seja aplicada uma nova pesquisa entre aqui e o ENAMED (ex: CSAT da revisão final), basta cadastrá-la na INDECX e ela aparece automaticamente aqui.</div>
+      </div>
+      <button class="btn-cadastrar">Cadastrar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title">Categorização de comentários · IA</div><div class="card-meta">Drivers depurados</div></div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Os comentários abertos das pesquisas (NPS e CSAT) passam por análise de sentimento e classificação automática em quatro grandes motivos:</div>
+    <div class="cat-grid">
+      <div class="cat-card cat-acad"><div class="cat-name">Acadêmico</div><div class="cat-desc">Aulas, conteúdo, didática, professor, prática clínica, simulados</div></div>
+      <div class="cat-card cat-oper"><div class="cat-name">Operacional</div><div class="cat-desc">Cronograma, horário, infraestrutura, processos institucionais</div></div>
+      <div class="cat-card cat-emoc"><div class="cat-name">Emocional</div><div class="cat-desc">Esgotamento, fadiga, pressão da prova, sofrimento expresso</div></div>
+      <div class="cat-card cat-rel"><div class="cat-name">Relacionamento</div><div class="cat-desc">Coordenação, preceptor, equipe, atendimento, comunicação</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB 5: CALIBRAÇÃO ══════════ -->
+<div class="tab-content" id="tab-calibracao">
+<div class="page">
+  <div style="margin-bottom:20px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:6px">05 · Calibração</div>
+    <div style="font-size:26px;font-weight:800;color:var(--navy);margin-bottom:6px">Limiares & Protocolo</div>
+    <div style="font-size:13px;color:var(--text2)">Pesos do score composto e gatilhos automáticos do farol. <strong>Ajustes refletem em tempo real no painel</strong> — todos os alunos são recalculados conforme você arrasta os controles.</div>
+  </div>
+
+  <div class="calib-grid">
+    <div class="calib-card">
+      <div class="calib-title">Pesos do score composto <span class="calib-total" id="totalPct">Σ 100%</span></div>
+      <div class="weight-row">
+        <div class="weight-header"><span class="weight-name">Performance acadêmica</span><span class="weight-pct" id="w1val">30%</span></div>
+        <div class="weight-sub">Última nota de simulado</div>
+        <input type="range" class="weight-slider" min="0" max="100" value="30" oninput="updateWeights(this,1)">
+      </div>
+      <div class="weight-row">
+        <div class="weight-header"><span class="weight-name">Engajamento</span><span class="weight-pct" id="w2val">25%</span></div>
+        <div class="weight-sub">Presença + logins/conclusão Medway</div>
+        <input type="range" class="weight-slider" min="0" max="100" value="25" oninput="updateWeights(this,2)">
+      </div>
+      <div class="weight-row">
+        <div class="weight-header"><span class="weight-name">Experiência (CSATs)</span><span class="weight-pct" id="w3val">20%</span></div>
+        <div class="weight-sub">Média ponderada das CSATs ativas</div>
+        <input type="range" class="weight-slider" min="0" max="100" value="20" oninput="updateWeights(this,3)">
+      </div>
+      <div class="weight-row">
+        <div class="weight-header"><span class="weight-name">Voz (NPS + sentimento)</span><span class="weight-pct" id="w4val">25%</span></div>
+        <div class="weight-sub">NPS + análise de sentimento IA</div>
+        <input type="range" class="weight-slider" min="0" max="100" value="25" oninput="updateWeights(this,4)">
+      </div>
+    </div>
+
+    <div class="calib-card">
+      <div class="calib-title">Limiares dos faróis <span style="font-size:11px;font-weight:400;color:var(--muted)">(score 0–100)</span></div>
+      <div class="limiar-rows">
+        <div class="limiar-row verde">
+          <div class="limiar-pill">● Verde</div>
+          <div class="limiar-text">até</div>
+          <input class="limiar-input" type="number" value="25">
+          <div class="limiar-next">→ Amarelo a partir</div>
+        </div>
+        <div class="limiar-row amarelo">
+          <div class="limiar-pill">● Amarelo</div>
+          <div class="limiar-text">até</div>
+          <input class="limiar-input" type="number" value="50">
+          <div class="limiar-next">→ Laranja a partir</div>
+        </div>
+        <div class="limiar-row laranja">
+          <div class="limiar-pill">● Laranja</div>
+          <div class="limiar-text">até</div>
+          <input class="limiar-input" type="number" value="75">
+          <div class="limiar-next">→ Vermelho a partir</div>
+        </div>
+        <div class="limiar-row vermelho">
+          <div class="limiar-pill">● Vermelho</div>
+          <div class="limiar-text">acima de</div>
+          <input class="limiar-input" type="number" value="75" style="background:#FEE8E6">
+          <div class="limiar-next">— comitê em 48h</div>
+        </div>
+      </div>
+      <div class="calib-actions">
+        <button class="btn-reset">↺ Restaurar padrão</button>
+        <button class="btn-apply">✓ Aplicar e recalcular</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="impact-dist">
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span style="width:3px;height:14px;background:var(--gold);border-radius:99px;display:inline-block"></span>Impacto da calibração na turma</span><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Recalculado em tempo real</span></div>
+    <div style="margin-bottom:14px"></div>
+    <div class="impact-cards">
+      <div class="impact-card verde"><div class="ic-num">166</div><div class="ic-label">Verde</div><div class="ic-pct">83% da turma</div></div>
+      <div class="impact-card amarelo"><div class="ic-num">23</div><div class="ic-label">Amarelo</div><div class="ic-pct">12% da turma</div></div>
+      <div class="impact-card laranja"><div class="ic-num">9</div><div class="ic-label">Laranja</div><div class="ic-pct">5% da turma</div></div>
+      <div class="impact-card vermelho"><div class="ic-num">2</div><div class="ic-label">Vermelho</div><div class="ic-pct">1% da turma</div></div>
+    </div>
+    <div class="dist-bar">
+      <div class="dist-seg" style="flex:166;background:var(--green-light)">166</div>
+      <div class="dist-seg" style="flex:23;background:var(--yellow-light)">23</div>
+      <div class="dist-seg" style="flex:9;background:var(--orange-light)">9</div>
+      <div class="dist-seg" style="flex:2;background:var(--red-light)">2</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px">Distribuição da turma após aplicar calibração</div>
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px">Protocolo de ação</div>
+    <div class="protocolo-grid">
+      <div class="proto-card verde"><div class="proto-level">Verde</div><div class="proto-text">Monitoramento padrão. Pesquisas de pulso bimestrais.</div></div>
+      <div class="proto-card amarelo"><div class="proto-level">Amarelo</div><div class="proto-text">Acompanhamento ativo · CX revisita em 14 dias.</div></div>
+      <div class="proto-card laranja"><div class="proto-level">Laranja</div><div class="proto-text">Conversa individual · Coordenação acadêmica em até 7 dias.</div></div>
+      <div class="proto-card vermelho"><div class="proto-level">Vermelho</div><div class="proto-text">Comitê em 48h · Coordenação + Apoio Psicopedagógico.</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ MODAL ══════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+<div class="modal" id="modal">
+  <div class="modal-topbar">
+    <div class="modal-header">
+      <div class="modal-avatar" id="mAvatar">RS</div>
+      <div class="modal-info">
+        <div class="modal-breadcrumb" id="mBread">PERFIL DE ALUNO · CAMPINAS</div>
+        <div class="modal-name" id="mName">Ricardo Silva</div>
+        <div class="modal-pills">
+          <span class="modal-pill mpill-red" id="mRiskPill">● Vermelho</span>
+          <span class="modal-pill mpill-score" id="mScorePill">Score 78/100</span>
+          <span class="modal-pill mpill-date" id="mDatePill">Última atualização: 19/04/2026</span>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" onclick="switchModalTab('resumo')">Resumo</div>
+      <div class="modal-tab" onclick="switchModalTab('academico')">Acadêmico</div>
+      <div class="modal-tab" onclick="switchModalTab('voz')">Voz do aluno</div>
+      <div class="modal-tab" onclick="switchModalTab('tratativas')">Tratativas</div>
+      <div class="modal-tab" onclick="switchModalTab('plano')">Plano de Ação</div>
+    </div>
+  </div>
+  <div class="modal-body">
+
+    <!-- RESUMO -->
+    <div class="modal-tab-content active" id="mtab-resumo">
+      <div class="analise-block">
+        <div class="analise-label">Análise Sintética</div>
+        <div class="analise-text" id="mAnalise">Voz fortemente negativa concentrada em <strong>emocional</strong>. Sinais de risco crítico exigem ação imediata.</div>
+      </div>
+      <div class="ind-grid2">
+        <div class="ind-card2">
+          <div class="ind-label2">Última nota simulado</div>
+          <div class="ind-val2" id="mSimulado">29</div>
+          <div class="ind-sub2" id="mSimuladoSub">1/4 simulados com presença</div>
+        </div>
+        <div class="ind-card2">
+          <div class="ind-label2">Presença · Aulas preparatórias</div>
+          <div class="ind-val2" id="mPresenca">66%</div>
+          <div class="ind-sub2" id="mPresencaSub">12 semanas acompanhadas</div>
+        </div>
+        <div class="ind-card2">
+          <div class="ind-label2">Conclusão Medway</div>
+          <div class="ind-val2" id="mMedway">11%</div>
+          <div class="ind-sub2" id="mMedwaySub">3 logins nos últimos 30d</div>
+        </div>
+        <div class="ind-card2">
+          <div class="ind-label2">CSAT Preparatórias</div>
+          <div class="ind-val2" id="mCsat">2.9/5</div>
+          <div class="ind-sub2" id="mCsatSub">Baseado em 9 avaliações</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span>Sinais ativos</span><span style="font-size:11px;font-weight:600;color:var(--muted)" id="mFlagCount">4 flags</span>
+        </div>
+        <div class="sinais-ativos2" id="mSinaisAtivos"></div>
+      </div>
+    </div>
+
+    <!-- ACADÊMICO -->
+    <div class="modal-tab-content" id="mtab-academico">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Histórico completo de desempenho acadêmico e engajamento nas plataformas.</div>
+      <div class="ind-grid2">
+        <div class="ind-card2">
+          <div class="ind-label2">Simulado 1</div>
+          <div class="ind-val2 warn">42</div>
+          <div class="ind-sub2">Mar/2026</div>
+        </div>
+        <div class="ind-card2">
+          <div class="ind-label2">Simulado 2</div>
+          <div class="ind-val2">38</div>
+          <div class="ind-sub2">Fev/2026</div>
+        </div>
+        <div class="ind-card2">
+          <div class="ind-label2">Simulado 3</div>
+          <div class="ind-val2">29</div>
+          <div class="ind-sub2">Abr/2026 · último</div>
+        </div>
+        <div class="ind-card2">
+          <div class="ind-label2">Média da turma</div>
+          <div class="ind-val2 ok">62</div>
+          <div class="ind-sub2">Referência</div>
+        </div>
+        <div class="ind-card2">
+          <div class="ind-label2">Presença simulados</div>
+          <div class="ind-val2">25%</div>
+          <div class="ind-sub2">1 de 4 simulados</div>
+        </div>
+        <div class="ind-card2">
+          <div class="ind-label2">Logins Medway (30d)</div>
+          <div class="ind-val2">3</div>
+          <div class="ind-sub2">Média turma: 28 logins</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VOZ DO ALUNO -->
+    <div class="modal-tab-content" id="mtab-voz">
+      <div class="modal-sec-title">Análise de sentimento <span class="ia-badge2">IA</span></div>
+      <div class="card" style="animation:none;padding:14px">
+        <div class="sent-bar2" id="mSentBar">
+          <div class="sent-seg2" style="width:19%;background:#22C55E">19%</div>
+          <div class="sent-seg2" style="width:22%;background:#9CA3AF">22%</div>
+          <div class="sent-seg2" style="width:59%;background:#E53935">59%</div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:11px;color:var(--text2)">
+          <span>● <strong style="color:var(--green)">Positivo 19%</strong></span>
+          <span>● <strong>Neutro 22%</strong></span>
+          <span>● <strong style="color:var(--red)">Negativo 59%</strong></span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);text-align:center">Análise IA sobre 3 comentários · Últimos 60 dias</div>
+      </div>
+
+      <div class="modal-sec-title" style="margin-top:4px">Categorização do motivo <span class="ia-badge2">IA</span></div>
+      <div class="card" style="animation:none;padding:14px">
+        <div class="motbar-list">
+          <div class="motbar-row"><div class="motbar-top"><span class="motbar-name"><span class="motbar-dot" style="background:#4F6EB4"></span>Acadêmico</span><span class="motbar-pct">46%</span></div><div class="motbar-track"><div class="motbar-fill" style="width:46%;background:#4F6EB4"></div></div></div>
+          <div class="motbar-row"><div class="motbar-top"><span class="motbar-name"><span class="motbar-dot" style="background:#E07820"></span>Relacionamento</span><span class="motbar-pct">41%</span></div><div class="motbar-track"><div class="motbar-fill" style="width:41%;background:#E07820"></div></div></div>
+          <div class="motbar-row"><div class="motbar-top"><span class="motbar-name"><span class="motbar-dot" style="background:#9090C0"></span>Operacional</span><span class="motbar-pct">10%</span></div><div class="motbar-track"><div class="motbar-fill" style="width:10%;background:#9090C0"></div></div></div>
+          <div class="motbar-row"><div class="motbar-top"><span class="motbar-name"><span class="motbar-dot" style="background:#E53935"></span>Emocional</span><span class="motbar-pct">3%</span></div><div class="motbar-track"><div class="motbar-fill" style="width:3%;background:#E53935"></div></div></div>
+        </div>
+      </div>
+
+      <div class="modal-sec-title">Voz do aluno <span class="ia-badge2">IA</span></div>
+      <div class="voz-block2">
+        <div class="voz-label2">⊕ Sumário da voz</div>
+        <div class="voz-text2" id="mVoz">Sinais consistentes em <em>Acadêmico</em>, principalmente sobre feedback de simulados.</div>
+        <div class="voz-footer2">
+          <span class="voz-chip2"><strong>3</strong> citações analisadas</span>
+          <span class="voz-chip2"><strong>3</strong> drivers identificados</span>
+          <span class="voz-chip2">Janela: últimos 60 dias</span>
+          <span class="voz-chip2">Fontes: NPS · CSAT · Concierge</span>
+        </div>
+      </div>
+
+      <div class="modal-sec-title">Citações textuais <span style="font-size:11px;color:var(--muted);font-weight:400">3 verbatim(s)</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px" id="mCitacoes">
+        <div class="citacao2"><div class="cit-header2"><span class="cit-cat2">Acadêmico</span><span class="cit-arr">›</span><span class="cit-sub2">Feedback de simulados</span><span class="cit-badge2">● Negativo</span></div><div class="cit-text2">"Os simulados não vêm com gabarito comentado, a gente fica sem saber o porquê do erro."</div><div class="cit-source2">CSAT Prep · Sem 16</div></div>
+        <div class="citacao2"><div class="cit-header2"><span class="cit-cat2">Acadêmico</span><span class="cit-arr">›</span><span class="cit-sub2">Qualidade do material</span><span class="cit-badge2">● Negativo</span></div><div class="cit-text2">"O material das preparatórias está confuso, falta organização entre os módulos e os simulados."</div><div class="cit-source2">CSAT Internato Mês · Abr/26</div></div>
+        <div class="citacao2"><div class="cit-header2"><span class="cit-cat2" style="background:#E8F5EE;color:var(--green)">Relacionamento</span><span class="cit-arr">›</span><span class="cit-sub2">Preceptores no internato</span><span class="cit-badge2">● Negativo</span></div><div class="cit-text2">"O preceptor não dá feedback sobre minhas evoluções no internato, fico sem referência."</div><div class="cit-source2">CSAT Internato Mês · Abr/26</div></div>
+      </div>
+    </div>
+
+    <!-- TRATATIVAS -->
+    <div class="modal-tab-content" id="mtab-tratativas">
+      <div class="tratativa-form2">
+        <div class="tf-label">⊕ Nova Tratativa</div>
+        <div class="tf-fields">
+          <div class="tf-field"><label>Data</label><input type="date" id="tratData" value="2026-04-29"></div>
+          <div class="tf-field"><label>Responsável</label><select id="tratResp"><option>Time CX</option><option>Coordenação Acadêmica</option><option>Apoio Psicopedagógico</option><option>Direção</option></select></div>
+          <div class="tf-field"><label>Categoria</label><select id="tratCat"><option>Contato inicial</option><option>Follow-up</option><option>Comitê 48h</option><option>Plano de recuperação</option><option>Encaminhamento psicopedagógico</option><option>Resolução</option></select></div>
+        </div>
+        <textarea class="tf-textarea" id="tratDesc" placeholder="Descreva o contato: o que foi conversado, o que o aluno relatou, próximos passos acordados..."></textarea>
+        <div class="tf-footer2">
+          <div class="tf-note">Status inicial: aberta · pode ser concluída depois</div>
+          <button class="btn-registrar" onclick="registrarTratativa()">Registrar tratativa</button>
+        </div>
+      </div>
+      <div id="tratativasList" style="margin-top:12px">
+        <div class="trat-empty2"><div>Nenhuma tratativa registrada</div><div style="margin-top:4px;font-size:11px">Registrar contato após primeira interação.</div></div>
+      </div>
+    </div>
+
+    <!-- PLANO DE AÇÃO -->
+    <div class="modal-tab-content" id="mtab-plano">
+      <div class="plano-ia">
+        <div class="plano-ia-header"><span class="plano-ia-badge">⊕ Plano sugerido por IA</span></div>
+        <div class="plano-title" id="mPlanoTitle">Risco acadêmico moderado — reforço pedagógico e acompanhamento próximo.</div>
+        <div class="plano-desc" id="mPlanoDesc">Sinais predominantemente acadêmicos (46% dos motivos) indicam dificuldade pontual com conteúdo ou ritmo. Intervenção pedagógica antes que o quadro se agrave.</div>
+        <div class="plano-steps" id="mPlanoSteps">
+          <div class="plano-step"><div class="ps-num">1</div><div class="ps-content"><div class="ps-text"><strong>Conversa individual</strong> com tutor para mapear dificuldades específicas.</div><div class="ps-tag">Coord. Acadêmica · 7D</div></div></div>
+          <div class="plano-step"><div class="ps-num">2</div><div class="ps-content"><div class="ps-text"><strong>Reforço dirigido</strong> nas disciplinas com pior desempenho recente.</div><div class="ps-tag">Coord. · 14D</div></div></div>
+          <div class="plano-step"><div class="ps-num">3</div><div class="ps-content"><div class="ps-text"><strong>Reavaliar</strong> em 30 dias após o próximo simulado.</div><div class="ps-tag">Automático</div></div></div>
+        </div>
+        <div class="plano-footer">Recomendação assistiva · validação humana obrigatória antes da execução</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(name) {
+  const names = ['farol','alunos','tendencias','fontes','calibracao'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ── STUDENTS DATA ─────────────────────────────────────────────
+const students = [
+  {id:'ricardo',initials:'RS',color:'#C0392B',name:'Ricardo Silva',mat:'M413D7',unidade:'Campinas',risco:'vermelho',simulado:29,presenca:25,medway:11,csatP:2.9,csatS:2.3,csatM:2.3,nps:['D','D','D'],trats:0},
+  {id:'arthur',initials:'AS',color:'#C0392B',name:'Arthur Souza',mat:'MFD3A1',unidade:'Arcoverde',risco:'vermelho',simulado:35,presenca:0,medway:30,csatP:1.8,csatS:2.2,csatM:2.4,nps:['P','D','D'],trats:2},
+  {id:'manuela',initials:'MR',color:'#E07820',name:'Manuela Ramos',mat:'MD0C47',unidade:'Araras',risco:'laranja',simulado:20,presenca:75,medway:5,csatP:2.0,csatS:2.8,csatM:2.2,nps:['N','N','D'],trats:3},
+  {id:'mariana',initials:'MM',color:'#E07820',name:'Mariana Moraes',mat:'M715C9',unidade:'Arcoverde',risco:'laranja',simulado:31,presenca:50,medway:25,csatP:2.2,csatS:2.1,csatM:1.7,nps:['P','N','D'],trats:3},
+  {id:'pedro',initials:'PM',color:'#D4A017',name:'Pedro Martins',mat:'M492A3',unidade:'Limeira',risco:'amarelo',simulado:48,presenca:80,medway:45,csatP:3.1,csatS:3.4,csatM:3.2,nps:['P','P','N'],trats:0},
+  {id:'julia',initials:'JF',color:'#D4A017',name:'Julia Ferreira',mat:'M381K2',unidade:'Campinas',risco:'amarelo',simulado:52,presenca:70,medway:38,csatP:3.4,csatS:3.1,csatM:3.8,nps:['P','N','N'],trats:1},
+  {id:'lucas',initials:'LC',color:'#2E7D52',name:'Lucas Carvalho',mat:'M290T7',unidade:'Araras',risco:'verde',simulado:71,presenca:92,medway:78,csatP:4.2,csatS:4.5,csatM:4.1,nps:['P','P','P'],trats:0},
+  {id:'carolina',initials:'CA',color:'#2E7D52',name:'Carolina Alves',mat:'M318B5',unidade:'Limeira',risco:'verde',simulado:68,presenca:88,medway:82,csatP:4.0,csatS:4.2,csatM:4.4,nps:['P','P','P'],trats:0},
+];
+
+let currentStudent = 'ricardo';
+const tratativas = {};
+let filtroRisco = '';
+
+function renderTable(list) {
+  const body = document.getElementById('studentTableBody');
+  const rColors = {vermelho:'var(--red-light)',laranja:'var(--orange-light)',amarelo:'var(--yellow-light)',verde:'var(--green-light)'};
+  body.innerHTML = list.map(s=>`
+    <tr onclick="openModal('${s.id}')">
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div class="st-avatar" style="background:${s.color}">${s.initials}</div>
+        <div><div class="st-name">${s.name}</div><div class="st-mat">${s.mat}</div></div>
+      </div></td>
+      <td style="color:var(--text2)">${s.unidade}</td>
+      <td><span class="risk-pill ${s.risco}"><span class="risk-pill-dot"></span>${s.risco.charAt(0).toUpperCase()+s.risco.slice(1)}</span></td>
+      <td>
+        <div style="font-weight:600;color:${s.simulado<40?'var(--red)':s.simulado<55?'var(--yellow)':'var(--green)'}">${s.simulado}</div>
+        <div class="mini-bar"><div class="mini-fill" style="width:${s.simulado}%;background:${s.simulado<40?'var(--red-light)':s.simulado<55?'var(--yellow-light)':'var(--green-light)'}"></div></div>
+      </td>
+      <td>
+        <div style="font-weight:600;color:${s.presenca<50?'var(--red)':s.presenca<75?'var(--yellow)':'var(--green)'}">${s.presenca}%</div>
+        <div class="mini-bar"><div class="mini-fill" style="width:${s.presenca}%;background:${s.presenca<50?'var(--red-light)':s.presenca<75?'var(--yellow-light)':'var(--green-light)'}"></div></div>
+      </td>
+      <td>
+        <div style="font-weight:600;color:${s.medway<40?'var(--red)':s.medway<60?'var(--yellow)':'var(--green)'}">${s.medway}%</div>
+        <div class="mini-bar"><div class="mini-fill" style="width:${s.medway}%;background:${s.medway<40?'var(--red-light)':s.medway<60?'var(--yellow-light)':'var(--green-light)'}"></div></div>
+      </td>
+      <td><div class="csat-chips">
+        <span class="csat-c" style="background:${s.csatP<3?'var(--red-bg)':'var(--yellow-bg)'};color:${s.csatP<3?'var(--red)':'var(--yellow)'}">P ${s.csatP}</span>
+        <span class="csat-c" style="background:${s.csatS<3?'var(--red-bg)':'var(--yellow-bg)'};color:${s.csatS<3?'var(--red)':'var(--yellow)'}">S ${s.csatS}</span>
+        <span class="csat-c" style="background:${s.csatM<3?'var(--red-bg)':'var(--yellow-bg)'};color:${s.csatM<3?'var(--red)':'var(--yellow)'}">M ${s.csatM}</span>
+      </div></td>
+      <td><div class="nps-trail">${s.nps.map(n=>`<div class="nps-dot ${n}">${n}</div>`).join('')}</div></td>
+      <td style="color:${s.trats>0?'var(--blue)':'var(--muted)';};font-weight:600">${s.trats>0?s.trats:'—'}</td>
+    </tr>
+  `).join('');
+}
+
+function filterStudents() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const u = document.getElementById('filterUnidade').value;
+  const r = document.getElementById('filterRisco').value.toLowerCase();
+  const filtered = students.filter(s=>
+    (!q || s.name.toLowerCase().includes(q) || s.mat.toLowerCase().includes(q)) &&
+    (!u || s.unidade === u) &&
+    (!r || s.risco === r)
+  );
+  renderTable(filtered);
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value='';
+  document.getElementById('filterUnidade').value='';
+  document.getElementById('filterRisco').value='';
+  document.getElementById('filterTrat').value='';
+  renderTable(students);
+}
+
+function filterAndGoAlunos(risco) {
+  switchTab('alunos');
+  document.getElementById('filterRisco').value=risco.charAt(0).toUpperCase()+risco.slice(1);
+  filterStudents();
+}
+
+renderTable(students);
+
+// ── MODAL ─────────────────────────────────────────────────────
+const studentData = {
+  ricardo: {
+    bread:'PERFIL DE ALUNO · CAMPINAS', name:'Ricardo Silva', initials:'RS', color:'#C0392B',
+    riskPill:'● Vermelho', scorePill:'Score 78/100', datePill:'Última atualização: 19/04/2026',
+    analise:'Voz fortemente negativa concentrada em <strong>emocional</strong>. Sinais de risco crítico exigem ação imediata.',
+    simulado:'29',simuladoSub:'1/4 simulados com presença',
+    presenca:'66%',presencaSub:'12 semanas acompanhadas',
+    medway:'11%',medwaySub:'3 logins nos últimos 30d',
+    csat:'2.9/5',csatSub:'Baseado em 9 avaliações',
+    flagCount:'4 flags',
+    sinais:[{t:'Score composto crítico (≥75)',d:'agora'},{t:'CSAT preparatórias mínimo: 2.9/5',d:'mar-abr/26'},{t:'Detrator no NPS atual',d:'ciclo 26.1'},{t:'Presença em simulado: 25%',d:'últ. 4 sim'}],
+    voz:'Sinais consistentes em <em>Acadêmico</em>, principalmente sobre feedback de simulados.',
+    planoTitle:'Risco acadêmico moderado — reforço pedagógico e acompanhamento próximo.',
+    planoDesc:'Sinais predominantemente acadêmicos (46% dos motivos) indicam dificuldade pontual com conteúdo ou ritmo. Intervenção pedagógica antes que o quadro se agrave.',
+    planoSteps:[{n:1,text:'<strong>Conversa individual</strong> com tutor para mapear dificuldades específicas.',tag:'Coord. Acadêmica · 7D'},{n:2,text:'<strong>Reforço dirigido</strong> nas disciplinas com pior desempenho recente.',tag:'Coord. · 14D'},{n:3,text:'<strong>Reavaliar</strong> em 30 dias após o próximo simulado.',tag:'Automático'}],
+  },
+  arthur: {
+    bread:'PERFIL DE ALUNO · ARCOVERDE', name:'Arthur Souza', initials:'AS', color:'#C0392B',
+    riskPill:'● Vermelho', scorePill:'Score 75/100', datePill:'Última atualização: 19/04/2026',
+    analise:'Presença <strong>zero</strong> nos simulados e Medway criticamente baixo. Risco de desengajamento total antes da prova.',
+    simulado:'35',simuladoSub:'0 simulados com presença recente',
+    presenca:'0%',presencaSub:'Ausente nas últimas 4 semanas',
+    medway:'30%',medwaySub:'Queda nas últimas 2 semanas',
+    csat:'1.8/5',csatSub:'Menor CSAT da unidade',
+    flagCount:'4 flags',
+    sinais:[{t:'Score composto crítico (≥75)',d:'agora'},{t:'Presença zero em simulados',d:'abr/26'},{t:'CSAT mínimo: 1.8/5',d:'mar-abr/26'},{t:'Detrator no NPS atual',d:'ciclo 26.1'}],
+    voz:'Sinal de <em>Emocional</em> dominante — indicadores de esgotamento e afastamento.',
+    planoTitle:'Risco crítico — intervenção imediata com apoio psicopedagógico.',
+    planoDesc:'Ausência total nos simulados combinada com CSAT mínimo sugere desengajamento ativo. Janela de recuperação curta.',
+    planoSteps:[{n:1,text:'<strong>Comitê em 48h</strong> — CX, Coordenação Acadêmica e Apoio Psicopedagógico.',tag:'CX · 48H'},{n:2,text:'<strong>Acolhimento individual</strong> para entender motivo do afastamento.',tag:'Apoio Psicopedagógico · 48H'},{n:3,text:'<strong>Plano de retomada gradual</strong> com metas semanais acordadas.',tag:'Coord. Acadêmica · 7D'}],
+  },
+  manuela: {
+    bread:'PERFIL DE ALUNO · ARARAS', name:'Manuela Ramos', initials:'MR', color:'#E07820',
+    riskPill:'● Laranja', scorePill:'Score 74/100', datePill:'Última atualização: 19/04/2026',
+    analise:'Queda de desempenho em simulado contrastando com boa presença. Sinal de <strong>dificuldade de conteúdo</strong>, não desengajamento.',
+    simulado:'20',simuladoSub:'Queda de 15pts vs. simulado anterior',
+    presenca:'75%',presencaSub:'Presença estável',
+    medway:'5%',medwaySub:'Queda acentuada — era 42%',
+    csat:'2.0/5',csatSub:'Queda nas últimas 3 semanas',
+    flagCount:'3 flags',
+    sinais:[{t:'Queda simulado vs. histórico próprio',d:'abr/26'},{t:'Conclusão Medway abaixo de 40%',d:'sem 13-16'},{t:'CSAT preparatórias em queda',d:'sem 14-16'}],
+    voz:'Sinais em <em>Acadêmico</em> — dificuldade com ritmo e volume de conteúdo.',
+    planoTitle:'Risco acadêmico — intervenção antes do próximo simulado.',
+    planoDesc:'Presença estável com queda de performance aponta para dificuldade de conteúdo. Janela de recuperação ainda aberta.',
+    planoSteps:[{n:1,text:'<strong>Conversa com coordenador</strong> para identificar disciplinas específicas.',tag:'Coord. Acadêmica · 7D'},{n:2,text:'<strong>Reativar Medway</strong> com plano personalizado de exercícios.',tag:'Coord. · 14D'},{n:3,text:'<strong>Monitorar</strong> no próximo simulado.',tag:'Automático'}],
+  },
+  mariana: {
+    bread:'PERFIL DE ALUNO · ARCOVERDE', name:'Mariana Moraes', initials:'MM', color:'#E07820',
+    riskPill:'● Laranja', scorePill:'Score 70/100', datePill:'Última atualização: 19/04/2026',
+    analise:'Múltiplos indicadores em zona amarela-laranja. Padrão de <strong>fadiga</strong> — aluna comparece mas está rendendo abaixo do esperado.',
+    simulado:'31',simuladoSub:'Estável, abaixo da média',
+    presenca:'50%',presencaSub:'Queda nas últimas 3 semanas',
+    medway:'25%',medwaySub:'Abaixo da média da turma',
+    csat:'2.2/5',csatSub:'Consistentemente abaixo de 3',
+    flagCount:'3 flags',
+    sinais:[{t:'CSAT abaixo de 2.5 por 4 semanas',d:'sem 13-16'},{t:'Presença em queda',d:'abr/26'},{t:'NPS atual = Detrator',d:'ciclo 26.1'}],
+    voz:'Sinal de <em>Operacional</em> — questões de cronograma e carga intensificando percepção de pressão.',
+    planoTitle:'Fadiga identificada — redução de pressão e acompanhamento CX.',
+    planoDesc:'Padrão de fadiga pré-prova. Presença mantida mas com qualidade de engajamento em queda.',
+    planoSteps:[{n:1,text:'<strong>Contato CX</strong> para escuta ativa e identificação de pressões específicas.',tag:'CX · 7D'},{n:2,text:'<strong>Conversa com preceptor</strong> sobre ajuste de expectativas no internato.',tag:'Coord. Acadêmica · 14D'},{n:3,text:'<strong>Reavaliar</strong> após próximo CSAT.',tag:'Automático'}],
+  },
+};
+
+function openModal(id) {
+  currentStudent = id;
+  const d = studentData[id];
+  if(!d) return;
+  document.getElementById('mAvatar').textContent = d.initials;
+  document.getElementById('mAvatar').style.background = d.color;
+  document.getElementById('mBread').textContent = d.bread;
+  document.getElementById('mName').textContent = d.name;
+  document.getElementById('mRiskPill').textContent = d.riskPill;
+  document.getElementById('mScorePill').textContent = d.scorePill;
+  document.getElementById('mDatePill').textContent = d.datePill;
+  document.getElementById('mAnalise').innerHTML = d.analise;
+  document.getElementById('mSimulado').textContent = d.simulado;
+  document.getElementById('mSimuladoSub').textContent = d.simuladoSub;
+  document.getElementById('mPresenca').textContent = d.presenca;
+  document.getElementById('mPresencaSub').textContent = d.presencaSub;
+  document.getElementById('mMedway').textContent = d.medway;
+  document.getElementById('mMedwaySub').textContent = d.medwaySub;
+  document.getElementById('mCsat').textContent = d.csat;
+  document.getElementById('mCsatSub').textContent = d.csatSub;
+  document.getElementById('mFlagCount').textContent = d.flagCount;
+  document.getElementById('mVoz').innerHTML = d.voz;
+  document.getElementById('mPlanoTitle').textContent = d.planoTitle;
+  document.getElementById('mPlanoDesc').textContent = d.planoDesc;
+  document.getElementById('mSinaisAtivos').innerHTML = d.sinais.map(s=>`
+    <div class="sa-row"><div class="sa-left"><div class="sa-dot2" style="background:var(--red-light);animation:blink 1.5s infinite"></div><div class="sa-text">${s.t}</div></div><div class="sa-date">${s.d}</div></div>
+  `).join('');
+  document.getElementById('mPlanoSteps').innerHTML = d.planoSteps.map(s=>`
+    <div class="plano-step"><div class="ps-num">${s.n}</div><div class="ps-content"><div class="ps-text">${s.text}</div><div class="ps-tag">${s.tag}</div></div></div>
+  `).join('');
+  renderTratativas();
+  switchModalTab('resumo');
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('modal').scrollTop=0;
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function handleOverlayClick(e) {
+  if(e.target===document.getElementById('modalOverlay')) closeModal();
+}
+
+function switchModalTab(name) {
+  const names=['resumo','academico','voz','tratativas','plano'];
+  document.querySelectorAll('.modal-tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
+  document.querySelectorAll('.modal-tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('mtab-'+name).classList.add('active');
+}
+
+function registrarTratativa() {
+  const desc = document.getElementById('tratDesc').value.trim();
+  if(!desc){document.getElementById('tratDesc').style.borderColor='var(--red)';return;}
+  document.getElementById('tratDesc').style.borderColor='';
+  if(!tratativas[currentStudent]) tratativas[currentStudent]=[];
+  tratativas[currentStudent].push({
+    data:document.getElementById('tratData').value,
+    resp:document.getElementById('tratResp').value,
+    cat:document.getElementById('tratCat').value,
+    desc, ts:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+  });
+  document.getElementById('tratDesc').value='';
+  renderTratativas();
+}
+
+function renderTratativas() {
+  const list = tratativas[currentStudent]||[];
+  const el = document.getElementById('tratativasList');
+  if(!list.length){el.innerHTML='<div class="trat-empty2"><div>Nenhuma tratativa registrada</div><div style="margin-top:4px;font-size:11px">Registrar contato após primeira interação.</div></div>';return;}
+  el.innerHTML = list.map(t=>`
+    <div style="border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:8px;background:var(--bg)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:700;color:var(--text)">${t.cat}</span>
+          <span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:2px 7px;border-radius:4px;font-weight:600">${t.resp}</span>
+        </div>
+        <span style="font-size:10px;color:var(--muted)">${t.data} · ${t.ts}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">${t.desc}</div>
+    </div>
+  `).join('');
+}
+
+// ── WEIGHTS ───────────────────────────────────────────────────
+function updateWeights(slider, idx) {
+  document.getElementById('w'+idx+'val').textContent = slider.value+'%';
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{if(e.key==='Escape') closeModal();});
+</script>
+</body>
+</html>
